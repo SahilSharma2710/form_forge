@@ -49,6 +49,7 @@ class FormForgeGenerator extends Generator {
 
       _generateDataClass(buffer, className, fields);
       _generateController(buffer, className, fields);
+      _generateWidget(buffer, className, fields);
     }
 
     final output = buffer.toString();
@@ -411,6 +412,145 @@ class FormForgeGenerator extends Generator {
     buffer.writeln('    ${field.name}.error = null;');
     buffer.writeln('  }');
     buffer.writeln();
+  }
+
+  void _generateWidget(
+    StringBuffer buffer,
+    String className,
+    List<ResolvedField> fields,
+  ) {
+    final widgetName = '${className}FormWidget';
+    final controllerName = '${className}FormController';
+
+    buffer.writeln();
+    buffer.writeln('/// Generated form widget for [$className].');
+    buffer.writeln(
+        'class $widgetName extends StatefulWidget {');
+    buffer.writeln('  /// The form controller managing state and validation.');
+    buffer.writeln('  final $controllerName controller;');
+    buffer.writeln();
+    buffer.writeln('  /// Creates a [$widgetName].');
+    buffer.writeln(
+        '  const $widgetName({super.key, required this.controller});');
+    buffer.writeln();
+    buffer.writeln('  @override');
+    buffer.writeln(
+        '  State<$widgetName> createState() => _${widgetName}State();');
+    buffer.writeln('}');
+    buffer.writeln();
+
+    // State class
+    buffer.writeln(
+        'class _${widgetName}State extends State<$widgetName> {');
+    buffer.writeln();
+
+    // Per-field builder methods
+    for (final field in fields) {
+      _generateFieldBuilder(buffer, field);
+    }
+
+    // Build method
+    buffer.writeln('  @override');
+    buffer.writeln('  Widget build(BuildContext context) {');
+    buffer.writeln('    return AnimatedBuilder(');
+    buffer.writeln('      animation: widget.controller,');
+    buffer.writeln('      builder: (context, _) {');
+    buffer.writeln('        return Form(');
+    buffer.writeln('          child: Column(');
+    buffer.writeln(
+        '            crossAxisAlignment: CrossAxisAlignment.stretch,');
+    buffer.writeln('            children: [');
+    for (final field in fields) {
+      final methodName =
+          'build${field.name[0].toUpperCase()}${field.name.substring(1)}Field';
+      buffer.writeln('              $methodName(),');
+    }
+    buffer.writeln('            ],');
+    buffer.writeln('          ),');
+    buffer.writeln('        );');
+    buffer.writeln('      },');
+    buffer.writeln('    );');
+    buffer.writeln('  }');
+
+    buffer.writeln('}');
+  }
+
+  void _generateFieldBuilder(StringBuffer buffer, ResolvedField field) {
+    final methodName =
+        'build${field.name[0].toUpperCase()}${field.name.substring(1)}Field';
+    final label = _humanize(field.name);
+
+    buffer.writeln('  /// Builds the widget for the [${field.name}] field.');
+    buffer.writeln('  Widget $methodName() {');
+
+    switch (field.typeName) {
+      case 'bool':
+        buffer.writeln('    return CheckboxListTile(');
+        buffer.writeln("      title: Text('$label'),");
+        buffer.writeln(
+            '      value: widget.controller.${field.name}.value,');
+        buffer.writeln('      onChanged: (v) {');
+        buffer.writeln(
+            '        widget.controller.${field.name}.value = v ?? false;');
+        buffer.writeln('      },');
+        buffer.writeln('    );');
+        break;
+      case 'int':
+      case 'double':
+        buffer.writeln('    return Padding(');
+        buffer.writeln(
+            '      padding: const EdgeInsets.symmetric(vertical: 8.0),');
+        buffer.writeln('      child: TextFormField(');
+        buffer.writeln('        keyboardType: TextInputType.number,');
+        buffer.writeln('        decoration: InputDecoration(');
+        buffer.writeln("          labelText: '$label',");
+        buffer.writeln(
+            '          errorText: widget.controller.${field.name}.error,');
+        buffer.writeln('        ),');
+        buffer.writeln(
+            "        initialValue: widget.controller.${field.name}.value.toString(),");
+        buffer.writeln('        onChanged: (v) {');
+        if (field.typeName == 'int') {
+          buffer.writeln(
+              '          widget.controller.${field.name}.value = int.tryParse(v) ?? 0;');
+        } else {
+          buffer.writeln(
+              '          widget.controller.${field.name}.value = double.tryParse(v) ?? 0.0;');
+        }
+        buffer.writeln('        },');
+        buffer.writeln('      ),');
+        buffer.writeln('    );');
+        break;
+      default:
+        // String and other types — TextFormField
+        buffer.writeln('    return Padding(');
+        buffer.writeln(
+            '      padding: const EdgeInsets.symmetric(vertical: 8.0),');
+        buffer.writeln('      child: TextFormField(');
+        buffer.writeln('        decoration: InputDecoration(');
+        buffer.writeln("          labelText: '$label',");
+        buffer.writeln(
+            '          errorText: widget.controller.${field.name}.error,');
+        buffer.writeln('        ),');
+        buffer.writeln('        onChanged: (v) {');
+        buffer.writeln(
+            '          widget.controller.${field.name}.value = v;');
+        buffer.writeln('        },');
+        buffer.writeln('      ),');
+        buffer.writeln('    );');
+        break;
+    }
+
+    buffer.writeln('  }');
+    buffer.writeln();
+  }
+
+  String _humanize(String camelCase) {
+    final result = camelCase.replaceAllMapped(
+      RegExp(r'[A-Z]'),
+      (match) => ' ${match.group(0)}',
+    );
+    return result[0].toUpperCase() + result.substring(1);
   }
 
   String _defaultValueFor(String typeName, bool isNullable) {
