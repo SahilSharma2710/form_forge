@@ -1,0 +1,24 @@
+name: form_forge_example
+description: Example Flutter app demonstrating form_forge usage.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.6.2
+  flutter: '>=3.10.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  form_forge:
+    path: ../form_forge
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  form_forge_generator:
+    path: ../form_forge_generator
+  build_runner: '>=2.4.0 <2.5.0'
+  flutter_lints: ^5.0.0
+
+resolution: workspace

@@ -1,0 +1,8 @@
+builders:
+  form_forge_generator:
+    import: "package:form_forge_generator/builder.dart"
+    builder_factories: ["formForgeBuilder"]
+    build_extensions: {".dart": [".form_forge.dart"]}
+    auto_apply: dependents
+    build_to: source
+    applies_builders: ["source_gen|combining_builder"]

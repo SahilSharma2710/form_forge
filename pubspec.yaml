@@ -1,0 +1,10 @@
+name: form_forge_workspace
+publish_to: none
+
+environment:
+  sdk: ^3.6.2
+
+workspace:
+  - packages/form_forge
+  - packages/form_forge_generator
+  - packages/form_forge_example

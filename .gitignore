@@ -1,2 +1,29 @@
+# BMAD & Claude
 .claude/
 _bmad/
+_bmad-output/
+
+# Dart/Flutter
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+*.iml
+
+# Generated code
+*.form_forge.dart
+*.g.dart
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Pub
+pubspec.lock
