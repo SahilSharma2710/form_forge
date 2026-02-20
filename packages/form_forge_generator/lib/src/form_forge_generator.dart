@@ -155,7 +155,6 @@ class FormForgeGenerator extends Generator {
           '  Future<void> validateAsync() async {');
       buffer.writeln('    final futures = <Future<void>>[];');
       for (final field in asyncFields) {
-        final debounce = field.asyncDebounceMs ?? 500;
         buffer.writeln(
             '    if (_asyncValidators.containsKey(\'${field.name}\')) {');
         buffer.writeln(

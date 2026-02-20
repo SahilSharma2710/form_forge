@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  analyze-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Analyze
+        run: dart analyze --fatal-infos
+
+      - name: Format check
+        run: dart format --set-exit-if-changed .
+
+      - name: Test form_forge (annotations)
+        working-directory: packages/form_forge
+        run: flutter test
+
+      - name: Test form_forge_generator
+        working-directory: packages/form_forge_generator
+        run: dart test
