@@ -14,11 +14,11 @@ import 'form_field_state.dart';
 /// ```dart
 /// // Generated code extends this:
 /// class LoginFormController extends FormForgeController {
-///   final FormFieldState<String> email = FormFieldState(initialValue: '');
-///   final FormFieldState<String> password = FormFieldState(initialValue: '');
+///   final ForgeFieldState<String> email = ForgeFieldState(initialValue: '');
+///   final ForgeFieldState<String> password = ForgeFieldState(initialValue: '');
 ///
 ///   @override
-///   List<FormFieldState<Object?>> get fields => [email, password];
+///   List<ForgeFieldState<Object?>> get fields => [email, password];
 /// }
 /// ```
 abstract class FormForgeController extends ChangeNotifier {
@@ -26,8 +26,8 @@ abstract class FormForgeController extends ChangeNotifier {
 
   /// The list of all field states in this form.
   ///
-  /// Subclasses must override this to return all [FormFieldState] instances.
-  List<FormFieldState<Object?>> get fields;
+  /// Subclasses must override this to return all [ForgeFieldState] instances.
+  List<ForgeFieldState<Object?>> get fields;
 
   /// Whether all fields in the form are currently valid.
   bool get isValid => fields.every((field) => field.isValid);
@@ -66,7 +66,7 @@ abstract class FormForgeController extends ChangeNotifier {
     }
   }
 
-  String _fieldName(FormFieldState<Object?> field) {
+  String _fieldName(ForgeFieldState<Object?> field) {
     final index = fields.indexOf(field);
     return index >= 0 ? 'field_$index' : 'unknown';
   }

@@ -92,7 +92,7 @@ void main() {
         }
       ''');
 
-      expect(result, contains('class SignUpFormFormData'));
+      expect(result, contains('class SignUpFormData'));
       expect(result, contains('final String name'));
       expect(result, contains('final String email'));
       expect(result, contains('final int age'));
@@ -108,7 +108,7 @@ void main() {
         }
       ''');
 
-      expect(result, contains('const SimpleFormFormData'));
+      expect(result, contains('const SimpleFormData'));
     });
 
     test('generates submit method on controller', () async {
@@ -125,7 +125,7 @@ void main() {
       ''');
 
       expect(result, contains('Future<void> submit'));
-      expect(result, contains('LoginFormFormData'));
+      expect(result, contains('LoginFormData'));
       expect(result, contains('validateAll'));
       expect(result, contains('isValid'));
     });

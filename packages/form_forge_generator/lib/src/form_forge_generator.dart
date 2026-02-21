@@ -61,7 +61,7 @@ class FormForgeGenerator extends Generator {
     String className,
     List<ResolvedField> fields,
   ) {
-    final controllerName = '${className}FormController';
+    final controllerName = '${_generatedPrefix(className)}FormController';
 
     final asyncFields =
         fields.where((f) => f.hasAsyncValidator).toList();
@@ -76,8 +76,8 @@ class FormForgeGenerator extends Generator {
           field.isNullable ? '${field.typeName}?' : field.typeName;
       final defaultValue = _defaultValueFor(field.typeName, field.isNullable);
       buffer.writeln(
-          '  final FormFieldState<$dartType> ${field.name} = '
-          'FormFieldState<$dartType>(initialValue: $defaultValue);');
+          '  final ForgeFieldState<$dartType> ${field.name} = '
+          'ForgeFieldState<$dartType>(initialValue: $defaultValue);');
     }
     buffer.writeln();
 
@@ -89,7 +89,7 @@ class FormForgeGenerator extends Generator {
 
     // Fields list override
     buffer.writeln('  @override');
-    buffer.writeln('  List<FormFieldState<Object?>> get fields => [');
+    buffer.writeln('  List<ForgeFieldState<Object?>> get fields => [');
     for (final field in fields) {
       buffer.writeln('    ${field.name},');
     }
@@ -176,9 +176,11 @@ class FormForgeGenerator extends Generator {
       buffer.writeln();
 
       // Debounced async trigger
-      // Per-field debounce constants
+      // Per-field debounce constants (used by _triggerAsyncValidation)
       for (final field in asyncFields) {
         final debounce = field.asyncDebounceMs ?? 500;
+        buffer.writeln(
+            '  // ignore: unused_field');
         buffer.writeln(
             '  static const int _${field.name}DebounceMs = $debounce;');
       }
@@ -186,6 +188,8 @@ class FormForgeGenerator extends Generator {
 
       buffer.writeln(
           '  /// Triggers debounced async validation for a field.');
+      buffer.writeln(
+          '  // ignore: unused_element');
       buffer.writeln(
           '  void _triggerAsyncValidation(String fieldName, dynamic value, int debounceMs) {');
       buffer.writeln(
@@ -252,7 +256,7 @@ class FormForgeGenerator extends Generator {
     }
 
     // Submission state
-    final dataClassName = '${className}FormData';
+    final dataClassName = '${_generatedPrefix(className)}FormData';
     buffer.writeln('  bool _isSubmitting = false;');
     buffer.writeln();
     buffer.writeln('  /// Whether the form is currently being submitted.');
@@ -294,7 +298,7 @@ class FormForgeGenerator extends Generator {
     String className,
     List<ResolvedField> fields,
   ) {
-    final dataClassName = '${className}FormData';
+    final dataClassName = '${_generatedPrefix(className)}FormData';
 
     buffer.writeln('/// Typed form data for [$className].');
     buffer.writeln('class $dataClassName {');
@@ -418,8 +422,8 @@ class FormForgeGenerator extends Generator {
     String className,
     List<ResolvedField> fields,
   ) {
-    final widgetName = '${className}FormWidget';
-    final controllerName = '${className}FormController';
+    final widgetName = '${_generatedPrefix(className)}FormWidget';
+    final controllerName = '${_generatedPrefix(className)}FormController';
 
     buffer.writeln();
     buffer.writeln('/// Generated form widget for [$className].');
@@ -550,6 +554,24 @@ class FormForgeGenerator extends Generator {
       (match) => ' ${match.group(0)}',
     );
     return result[0].toUpperCase() + result.substring(1);
+  }
+
+  /// Strips trailing "Form" from class name to avoid double-Form in generated names.
+  /// `LoginForm` → `LoginForm` (base), so `LoginFormController` not `LoginFormFormController`.
+  String _baseName(String className) {
+    if (className.endsWith('Form') && className.length > 4) {
+      return className;
+    }
+    return className;
+  }
+
+  /// Returns the name prefix for generated classes.
+  /// Strips trailing "Form" to avoid `LoginFormFormController`.
+  String _generatedPrefix(String className) {
+    if (className.endsWith('Form') && className.length > 4) {
+      return className.substring(0, className.length - 4);
+    }
+    return className;
   }
 
   String _defaultValueFor(String typeName, bool isNullable) {

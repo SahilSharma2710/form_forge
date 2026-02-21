@@ -19,10 +19,10 @@ void main() {
         }
       ''');
 
-      expect(result, contains('class LoginFormFormController'));
+      expect(result, contains('class LoginFormController'));
       expect(result, contains('extends FormForgeController'));
-      expect(result, contains('FormFieldState<String> email'));
-      expect(result, contains('FormFieldState<String> password'));
+      expect(result, contains('ForgeFieldState<String> email'));
+      expect(result, contains('ForgeFieldState<String> password'));
       expect(result, contains('initializeFields()'));
     });
 
@@ -65,7 +65,7 @@ void main() {
         }
       ''');
 
-      expect(result, contains('FormFieldState<String?>'));
+      expect(result, contains('ForgeFieldState<String?>'));
       expect(result, contains('initialValue: null'));
     });
 
@@ -79,7 +79,7 @@ void main() {
         }
       ''');
 
-      expect(result, contains('FormFieldState<int>'));
+      expect(result, contains('ForgeFieldState<int>'));
       expect(result, contains('initialValue: 0'));
     });
 
@@ -93,7 +93,7 @@ void main() {
         }
       ''');
 
-      expect(result, contains('FormFieldState<bool>'));
+      expect(result, contains('ForgeFieldState<bool>'));
       expect(result, contains('initialValue: false'));
     });
 
@@ -110,10 +110,10 @@ void main() {
         }
       ''');
 
-      expect(result, contains('FormFieldState<String> name'));
-      expect(result, contains('FormFieldState<int> age'));
-      expect(result, contains('FormFieldState<double> weight'));
-      expect(result, contains('FormFieldState<bool> active'));
+      expect(result, contains('ForgeFieldState<String> name'));
+      expect(result, contains('ForgeFieldState<int> age'));
+      expect(result, contains('ForgeFieldState<double> weight'));
+      expect(result, contains('ForgeFieldState<bool> active'));
       expect(result, contains("initialValue: ''"));
       expect(result, contains('initialValue: 0)'));
       expect(result, contains('initialValue: 0.0'));
@@ -130,7 +130,7 @@ void main() {
         }
       ''');
 
-      expect(result, contains('class MyCustomFormFormController'));
+      expect(result, contains('class MyCustomFormController'));
     });
   });
 }

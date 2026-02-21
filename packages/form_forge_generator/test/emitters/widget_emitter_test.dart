@@ -75,7 +75,7 @@ void main() {
         }
       ''');
 
-      expect(result, contains('class LoginFormFormWidget'));
+      expect(result, contains('class LoginFormWidget'));
       expect(result, contains('StatefulWidget'));
     });
 
@@ -128,7 +128,7 @@ void main() {
         }
       ''');
 
-      expect(result, contains('TestFormFormController'));
+      expect(result, contains('TestFormController'));
       expect(result, contains('controller'));
     });
 

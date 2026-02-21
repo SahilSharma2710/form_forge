@@ -98,9 +98,9 @@ void main() {
 
         // Verify the form generates correctly — extensibility is about
         // the architecture allowing custom validators and widgets
-        expect(result, contains('ExtensibleFormFormController'));
-        expect(result, contains('ExtensibleFormFormWidget'));
-        expect(result, contains('ExtensibleFormFormData'));
+        expect(result, contains('ExtensibleFormController'));
+        expect(result, contains('ExtensibleFormWidget'));
+        expect(result, contains('ExtensibleFormData'));
       });
     });
   });

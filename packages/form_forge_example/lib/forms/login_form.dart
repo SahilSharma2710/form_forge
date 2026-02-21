@@ -1,11 +1,14 @@
+import 'package:flutter/material.dart';
 import 'package:form_forge/form_forge.dart';
+
+part 'login_form.g.dart';
 
 /// Simple login form demonstrating basic validation.
 ///
 /// Run `dart run build_runner build` to generate:
-/// - `LoginFormFormController` — manages field state and validation
-/// - `LoginFormFormWidget` — renders the form UI
-/// - `LoginFormFormData` — typed submission data
+/// - `LoginFormController` — manages field state and validation
+/// - `LoginFormWidget` — renders the form UI
+/// - `LoginFormData` — typed submission data
 @FormForge()
 class LoginForm {
   @IsRequired()

@@ -4,21 +4,21 @@ import 'package:flutter/foundation.dart';
 /// validation error, and loading state.
 ///
 /// Each field in a generated form controller has a corresponding
-/// [FormFieldState] that tracks the field's current value, validation
+/// [ForgeFieldState] that tracks the field's current value, validation
 /// errors, and whether async validation is in progress.
 ///
 /// ```dart
-/// final field = FormFieldState<String>(initialValue: '');
+/// final field = ForgeFieldState<String>(initialValue: '');
 /// field.value = 'hello@example.com';
 /// print(field.isValid); // true (no error set)
 /// ```
-class FormFieldState<T> extends ChangeNotifier {
+class ForgeFieldState<T> extends ChangeNotifier {
   T _value;
   String? _error;
   final T _initialValue;
 
-  /// Creates a [FormFieldState] with the given [initialValue].
-  FormFieldState({required T initialValue})
+  /// Creates a [ForgeFieldState] with the given [initialValue].
+  ForgeFieldState({required T initialValue})
       : _value = initialValue,
         _initialValue = initialValue;
 

@@ -1,4 +1,7 @@
+import 'package:flutter/material.dart';
 import 'package:form_forge/form_forge.dart';
+
+part 'profile_form.g.dart';
 
 /// Profile edit form demonstrating multiple field types.
 ///
