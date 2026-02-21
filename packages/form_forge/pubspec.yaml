@@ -3,9 +3,14 @@ description: >-
   Code-generation powered form engine for Flutter. Annotate your Dart class,
   run build_runner, and get production-ready forms with validation.
 version: 0.1.0
-homepage: https://github.com/sahilsharma/form_forge
-repository: https://github.com/sahilsharma/form_forge
-issue_tracker: https://github.com/sahilsharma/form_forge/issues
+homepage: https://github.com/SahilSharma2710/form_forge
+repository: https://github.com/SahilSharma2710/form_forge
+issue_tracker: https://github.com/SahilSharma2710/form_forge/issues
+topics:
+  - form
+  - code-generation
+  - validation
+  - widgets
 
 environment:
   sdk: ^3.6.2
@@ -19,5 +24,3 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
-
-resolution: workspace
