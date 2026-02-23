@@ -69,6 +69,12 @@ class ResolvedField {
   /// Custom widget type name from @FieldWidget, if present.
   final String? customWidgetType;
 
+  /// Whether the field type is an enum.
+  final bool isEnum;
+
+  /// Enum constant names (e.g., ['male', 'female', 'other']).
+  final List<String>? enumValues;
+
   /// Creates a [ResolvedField].
   const ResolvedField({
     required this.name,
@@ -93,6 +99,8 @@ class ResolvedField {
     this.hasAsyncValidator = false,
     this.asyncDebounceMs,
     this.customWidgetType,
+    this.isEnum = false,
+    this.enumValues,
   });
 
   /// Whether this field has any sync validators.

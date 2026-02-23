@@ -123,10 +123,25 @@ class FieldResolver {
         ?.toTypeValue()
         ?.getDisplayString();
 
+    // Detect enum types
+    final baseType = field.type is InterfaceType
+        ? (field.type as InterfaceType)
+        : null;
+    final isEnum = baseType?.element is EnumElement;
+    final enumValues = isEnum
+        ? (baseType!.element as EnumElement)
+            .fields
+            .where((f) => f.isEnumConstant)
+            .map((f) => f.name)
+            .toList()
+        : null;
+
     return ResolvedField(
       name: field.name,
       typeName: typeName,
       isNullable: isNullable,
+      isEnum: isEnum,
+      enumValues: enumValues,
       isRequired: isRequired,
       requiredMessage: requiredMessage,
       isEmail: isEmail,

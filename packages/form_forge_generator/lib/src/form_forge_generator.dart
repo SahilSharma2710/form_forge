@@ -74,7 +74,7 @@ class FormForgeGenerator extends Generator {
     for (final field in fields) {
       final dartType =
           field.isNullable ? '${field.typeName}?' : field.typeName;
-      final defaultValue = _defaultValueFor(field.typeName, field.isNullable);
+      final defaultValue = _defaultValueFor(field);
       buffer.writeln(
           '  final ForgeFieldState<$dartType> ${field.name} = '
           'ForgeFieldState<$dartType>(initialValue: $defaultValue);');
@@ -176,20 +176,8 @@ class FormForgeGenerator extends Generator {
       buffer.writeln();
 
       // Debounced async trigger
-      // Per-field debounce constants (used by _triggerAsyncValidation)
-      for (final field in asyncFields) {
-        final debounce = field.asyncDebounceMs ?? 500;
-        buffer.writeln(
-            '  // ignore: unused_field');
-        buffer.writeln(
-            '  static const int _${field.name}DebounceMs = $debounce;');
-      }
-      buffer.writeln();
-
       buffer.writeln(
           '  /// Triggers debounced async validation for a field.');
-      buffer.writeln(
-          '  // ignore: unused_element');
       buffer.writeln(
           '  void _triggerAsyncValidation(String fieldName, dynamic value, int debounceMs) {');
       buffer.writeln(
@@ -336,17 +324,24 @@ class FormForgeGenerator extends Generator {
     // IsRequired
     if (field.isRequired) {
       final msg = field.requiredMessage ?? 'This field is required';
-      if (isStringType) {
+      if (isStringType && !field.isNullable) {
         buffer.writeln("    if (value.isEmpty) {");
+      } else if (isStringType && field.isNullable) {
+        buffer.writeln("    if (value == null || value.isEmpty) {");
       } else if (field.isNullable) {
         buffer.writeln("    if (value == null) {");
       } else {
-        // Non-nullable, non-string: always passes required check
-        buffer.writeln("    if (false) {");
+        // Non-nullable, non-string (int, double, bool, enum, DateTime):
+        // These always have a default value, so required is inherently satisfied.
+        // Skip the check — the field always has a value.
+        buffer.writeln("    // Required check skipped: non-nullable ${field.typeName} always has a value.");
+        buffer.writeln("    // Consider making the field nullable if you need an 'unset' state.");
       }
-      buffer.writeln("      ${field.name}.error = '$msg';");
-      buffer.writeln('      return;');
-      buffer.writeln('    }');
+      if (isStringType || field.isNullable) {
+        buffer.writeln("      ${field.name}.error = '$msg';");
+        buffer.writeln('      return;');
+        buffer.writeln('    }');
+      }
     }
 
     // IsEmail
@@ -386,8 +381,13 @@ class FormForgeGenerator extends Generator {
     // Pattern
     if (field.pattern != null) {
       final msg = field.patternMessage ?? 'Invalid format';
-      buffer.writeln(
-          "    if (!RegExp(r'${field.pattern}').hasMatch(value)) {");
+      if (field.isNullable) {
+        buffer.writeln(
+            "    if (value != null && !RegExp(r'${field.pattern}').hasMatch(value)) {");
+      } else {
+        buffer.writeln(
+            "    if (!RegExp(r'${field.pattern}').hasMatch(value)) {");
+      }
       buffer.writeln("      ${field.name}.error = '$msg';");
       buffer.writeln('      return;');
       buffer.writeln('    }');
@@ -486,62 +486,164 @@ class FormForgeGenerator extends Generator {
     buffer.writeln('  /// Builds the widget for the [${field.name}] field.');
     buffer.writeln('  Widget $methodName() {');
 
-    switch (field.typeName) {
-      case 'bool':
-        buffer.writeln('    return CheckboxListTile(');
-        buffer.writeln("      title: Text('$label'),");
-        buffer.writeln(
-            '      value: widget.controller.${field.name}.value,');
-        buffer.writeln('      onChanged: (v) {');
-        buffer.writeln(
-            '        widget.controller.${field.name}.value = v ?? false;');
-        buffer.writeln('      },');
-        buffer.writeln('    );');
-        break;
-      case 'int':
-      case 'double':
-        buffer.writeln('    return Padding(');
-        buffer.writeln(
-            '      padding: const EdgeInsets.symmetric(vertical: 8.0),');
-        buffer.writeln('      child: TextFormField(');
-        buffer.writeln('        keyboardType: TextInputType.number,');
-        buffer.writeln('        decoration: InputDecoration(');
-        buffer.writeln("          labelText: '$label',");
-        buffer.writeln(
-            '          errorText: widget.controller.${field.name}.error,');
-        buffer.writeln('        ),');
-        buffer.writeln(
-            "        initialValue: widget.controller.${field.name}.value.toString(),");
-        buffer.writeln('        onChanged: (v) {');
-        if (field.typeName == 'int') {
-          buffer.writeln(
-              '          widget.controller.${field.name}.value = int.tryParse(v) ?? 0;');
-        } else {
-          buffer.writeln(
-              '          widget.controller.${field.name}.value = double.tryParse(v) ?? 0.0;');
-        }
-        buffer.writeln('        },');
-        buffer.writeln('      ),');
-        buffer.writeln('    );');
-        break;
-      default:
-        // String and other types — TextFormField
-        buffer.writeln('    return Padding(');
-        buffer.writeln(
-            '      padding: const EdgeInsets.symmetric(vertical: 8.0),');
-        buffer.writeln('      child: TextFormField(');
-        buffer.writeln('        decoration: InputDecoration(');
-        buffer.writeln("          labelText: '$label',");
-        buffer.writeln(
-            '          errorText: widget.controller.${field.name}.error,');
-        buffer.writeln('        ),');
-        buffer.writeln('        onChanged: (v) {');
+    if (field.isEnum) {
+      // Enum → DropdownButtonFormField
+      final dartType =
+          field.isNullable ? '${field.typeName}?' : field.typeName;
+      buffer.writeln('    return Padding(');
+      buffer.writeln(
+          '      padding: const EdgeInsets.symmetric(vertical: 8.0),');
+      buffer.writeln('      child: DropdownButtonFormField<$dartType>(');
+      buffer.writeln('        decoration: InputDecoration(');
+      buffer.writeln("          labelText: '$label',");
+      buffer.writeln(
+          '          errorText: widget.controller.${field.name}.error,');
+      buffer.writeln('        ),');
+      buffer.writeln(
+          '        value: widget.controller.${field.name}.value,');
+      buffer.writeln(
+          '        items: ${field.typeName}.values.map((e) => DropdownMenuItem(');
+      buffer.writeln('          value: e,');
+      buffer.writeln('          child: Text(e.name),');
+      buffer.writeln('        )).toList(),');
+      buffer.writeln('        onChanged: (v) {');
+      if (field.isNullable) {
         buffer.writeln(
             '          widget.controller.${field.name}.value = v;');
-        buffer.writeln('        },');
-        buffer.writeln('      ),');
-        buffer.writeln('    );');
-        break;
+      } else {
+        buffer.writeln('          if (v != null) {');
+        buffer.writeln(
+            '            widget.controller.${field.name}.value = v;');
+        buffer.writeln('          }');
+      }
+      if (field.hasAsyncValidator) {
+        final debounce = field.asyncDebounceMs ?? 500;
+        buffer.writeln(
+            '          widget.controller._triggerAsyncValidation(\'${field.name}\', widget.controller.${field.name}.value, $debounce);');
+      }
+      buffer.writeln('        },');
+      buffer.writeln('      ),');
+      buffer.writeln('    );');
+    } else if (field.typeName == 'DateTime') {
+      // DateTime → Date picker
+      buffer.writeln('    return Padding(');
+      buffer.writeln(
+          '      padding: const EdgeInsets.symmetric(vertical: 8.0),');
+      buffer.writeln('      child: InkWell(');
+      buffer.writeln('        onTap: () async {');
+      buffer.writeln('          final picked = await showDatePicker(');
+      buffer.writeln('            context: context,');
+      if (field.isNullable) {
+        buffer.writeln(
+            '            initialDate: widget.controller.${field.name}.value ?? DateTime.now(),');
+      } else {
+        buffer.writeln(
+            '            initialDate: widget.controller.${field.name}.value,');
+      }
+      buffer.writeln(
+          '            firstDate: DateTime(1900),');
+      buffer.writeln(
+          '            lastDate: DateTime(2100),');
+      buffer.writeln('          );');
+      buffer.writeln('          if (picked != null) {');
+      buffer.writeln(
+          '            widget.controller.${field.name}.value = picked;');
+      if (field.hasAsyncValidator) {
+        final debounce = field.asyncDebounceMs ?? 500;
+        buffer.writeln(
+            '            widget.controller._triggerAsyncValidation(\'${field.name}\', widget.controller.${field.name}.value, $debounce);');
+      }
+      buffer.writeln('          }');
+      buffer.writeln('        },');
+      buffer.writeln('        child: InputDecorator(');
+      buffer.writeln('          decoration: InputDecoration(');
+      buffer.writeln("            labelText: '$label',");
+      buffer.writeln(
+          '            errorText: widget.controller.${field.name}.error,');
+      buffer.writeln('          ),');
+      if (field.isNullable) {
+        buffer.writeln(
+            "          child: Text(widget.controller.${field.name}.value?.toString().split(' ').first ?? 'Select date'),");
+      } else {
+        buffer.writeln(
+            "          child: Text(widget.controller.${field.name}.value.toString().split(' ').first),");
+      }
+      buffer.writeln('        ),');
+      buffer.writeln('      ),');
+      buffer.writeln('    );');
+    } else {
+      switch (field.typeName) {
+        case 'bool':
+          buffer.writeln('    return CheckboxListTile(');
+          buffer.writeln("      title: Text('$label'),");
+          buffer.writeln(
+              '      value: widget.controller.${field.name}.value,');
+          buffer.writeln('      onChanged: (v) {');
+          buffer.writeln(
+              '        widget.controller.${field.name}.value = v ?? false;');
+          if (field.hasAsyncValidator) {
+            final debounce = field.asyncDebounceMs ?? 500;
+            buffer.writeln(
+                '        widget.controller._triggerAsyncValidation(\'${field.name}\', widget.controller.${field.name}.value, $debounce);');
+          }
+          buffer.writeln('      },');
+          buffer.writeln('    );');
+          break;
+        case 'int':
+        case 'double':
+          buffer.writeln('    return Padding(');
+          buffer.writeln(
+              '      padding: const EdgeInsets.symmetric(vertical: 8.0),');
+          buffer.writeln('      child: TextFormField(');
+          buffer.writeln('        keyboardType: TextInputType.number,');
+          buffer.writeln('        decoration: InputDecoration(');
+          buffer.writeln("          labelText: '$label',");
+          buffer.writeln(
+              '          errorText: widget.controller.${field.name}.error,');
+          buffer.writeln('        ),');
+          buffer.writeln(
+              "        initialValue: widget.controller.${field.name}.value.toString(),");
+          buffer.writeln('        onChanged: (v) {');
+          if (field.typeName == 'int') {
+            buffer.writeln(
+                '          widget.controller.${field.name}.value = int.tryParse(v) ?? 0;');
+          } else {
+            buffer.writeln(
+                '          widget.controller.${field.name}.value = double.tryParse(v) ?? 0.0;');
+          }
+          if (field.hasAsyncValidator) {
+            final debounce = field.asyncDebounceMs ?? 500;
+            buffer.writeln(
+                '          widget.controller._triggerAsyncValidation(\'${field.name}\', widget.controller.${field.name}.value, $debounce);');
+          }
+          buffer.writeln('        },');
+          buffer.writeln('      ),');
+          buffer.writeln('    );');
+          break;
+        default:
+          // String and other types — TextFormField
+          buffer.writeln('    return Padding(');
+          buffer.writeln(
+              '      padding: const EdgeInsets.symmetric(vertical: 8.0),');
+          buffer.writeln('      child: TextFormField(');
+          buffer.writeln('        decoration: InputDecoration(');
+          buffer.writeln("          labelText: '$label',");
+          buffer.writeln(
+              '          errorText: widget.controller.${field.name}.error,');
+          buffer.writeln('        ),');
+          buffer.writeln('        onChanged: (v) {');
+          buffer.writeln(
+              '          widget.controller.${field.name}.value = v;');
+          if (field.hasAsyncValidator) {
+            final debounce = field.asyncDebounceMs ?? 500;
+            buffer.writeln(
+                '          widget.controller._triggerAsyncValidation(\'${field.name}\', widget.controller.${field.name}.value, $debounce);');
+          }
+          buffer.writeln('        },');
+          buffer.writeln('      ),');
+          buffer.writeln('    );');
+          break;
+      }
     }
 
     buffer.writeln('  }');
@@ -556,15 +658,6 @@ class FormForgeGenerator extends Generator {
     return result[0].toUpperCase() + result.substring(1);
   }
 
-  /// Strips trailing "Form" from class name to avoid double-Form in generated names.
-  /// `LoginForm` → `LoginForm` (base), so `LoginFormController` not `LoginFormFormController`.
-  String _baseName(String className) {
-    if (className.endsWith('Form') && className.length > 4) {
-      return className;
-    }
-    return className;
-  }
-
   /// Returns the name prefix for generated classes.
   /// Strips trailing "Form" to avoid `LoginFormFormController`.
   String _generatedPrefix(String className) {
@@ -574,9 +667,9 @@ class FormForgeGenerator extends Generator {
     return className;
   }
 
-  String _defaultValueFor(String typeName, bool isNullable) {
-    if (isNullable) return 'null';
-    switch (typeName) {
+  String _defaultValueFor(ResolvedField field) {
+    if (field.isNullable) return 'null';
+    switch (field.typeName) {
       case 'String':
         return "''";
       case 'int':
@@ -588,6 +681,9 @@ class FormForgeGenerator extends Generator {
       case 'DateTime':
         return 'DateTime.now()';
       default:
+        if (field.isEnum && field.enumValues != null && field.enumValues!.isNotEmpty) {
+          return '${field.typeName}.${field.enumValues!.first}';
+        }
         return 'null';
     }
   }
