@@ -2,7 +2,7 @@ name: form_forge
 description: >-
   Code-generation powered form engine for Flutter. Annotate your Dart class,
   run build_runner, and get production-ready forms with validation.
-version: 0.1.1
+version: 0.1.2
 homepage: https://github.com/SahilSharma2710/form_forge
 repository: https://github.com/SahilSharma2710/form_forge
 issue_tracker: https://github.com/SahilSharma2710/form_forge/issues
