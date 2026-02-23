@@ -53,18 +53,18 @@ class LoginForm {
 ```
 
 Run `dart run build_runner build` and you get:
-- `LoginFormFormController` — typed field access, validation, submission
-- `LoginFormFormWidget` — drop-in widget with error display
-- `LoginFormFormData` — typed data class for submission
+- `LoginFormController` — typed field access, validation, submission
+- `LoginFormWidget` — drop-in widget with error display
+- `LoginFormData` — typed data class for submission
 
 ## Installation
 
 ```yaml
 dependencies:
-  form_forge: ^0.1.0
+  form_forge: ^0.1.1
 
 dev_dependencies:
-  form_forge_generator: ^0.1.0
+  form_forge_generator: ^0.1.1
   build_runner: ^2.4.0
 ```
 
@@ -100,10 +100,10 @@ dart run build_runner build
 ### 3. Use
 
 ```dart
-final controller = SignUpFormFormController();
+final controller = SignUpFormController();
 
 // Drop-in widget
-SignUpFormFormWidget(controller: controller)
+SignUpFormWidget(controller: controller)
 
 // Or programmatic access
 controller.email.value = 'user@example.com';
@@ -145,7 +145,7 @@ class MyForm {
 }
 
 // In your widget:
-final controller = MyFormFormController();
+final controller = MyFormController();
 controller.registerAsyncValidator('username', (value) async {
   final exists = await api.checkUsername(value as String);
   return exists ? 'Username taken' : null;
@@ -197,8 +197,8 @@ class IsPhoneNumber extends FormForgeValidator {
 
 form_forge is state-management agnostic. The generated controller uses `ChangeNotifier`, which works with:
 
-- **Provider** — `ChangeNotifierProvider(create: (_) => MyFormFormController())`
-- **Riverpod** — `ChangeNotifierProvider((ref) => MyFormFormController())`
+- **Provider** — `ChangeNotifierProvider(create: (_) => MyFormController())`
+- **Riverpod** — `ChangeNotifierProvider((ref) => MyFormController())`
 - **Bloc** — Listen to controller changes in your Bloc
 - **Vanilla** — `ListenableBuilder(listenable: controller, builder: ...)`
 
