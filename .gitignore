@@ -27,3 +27,6 @@ Thumbs.db
 
 # Pub
 pubspec.lock
+
+# FVM Version Cache
+.fvm/

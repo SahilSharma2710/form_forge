@@ -5,6 +5,10 @@
 /// functional form with validation, error handling, and state management.
 library;
 
+// Flutter — re-exported so generated .g.dart part files have access to
+// StatefulWidget, TextFormField, etc. via a single form_forge import.
+export 'package:flutter/material.dart';
+
 // Annotations
 export 'src/annotations/form_forge.dart';
 export 'src/annotations/field_widget.dart';

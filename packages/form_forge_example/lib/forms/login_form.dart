@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:form_forge/form_forge.dart';
 
 part 'login_form.g.dart';

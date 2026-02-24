@@ -40,15 +40,19 @@ class _LoginPageState extends State<LoginPage> {
 **With form_forge** — 12 lines:
 
 ```dart
+import 'package:form_forge/form_forge.dart';
+
+part 'login_form.g.dart';
+
 @FormForge()
 class LoginForm {
   @IsRequired()
   @IsEmail()
-  final String email;
+  late final String email;
 
   @IsRequired()
   @MinLength(8)
-  final String password;
+  late final String password;
 }
 ```
 
@@ -61,10 +65,10 @@ Run `dart run build_runner build` and you get:
 
 ```yaml
 dependencies:
-  form_forge: ^0.1.1
+  form_forge: ^0.1.3
 
 dev_dependencies:
-  form_forge_generator: ^0.1.1
+  form_forge_generator: ^0.1.2
   build_runner: ^2.4.0
 ```
 
@@ -75,19 +79,21 @@ dev_dependencies:
 ```dart
 import 'package:form_forge/form_forge.dart';
 
+part 'sign_up_form.g.dart';
+
 @FormForge()
 class SignUpForm {
   @IsRequired()
   @IsEmail()
-  final String email;
+  late final String email;
 
   @IsRequired()
   @MinLength(8)
-  final String password;
+  late final String password;
 
   @IsRequired()
   @MustMatch('password')
-  final String confirmPassword;
+  late final String confirmPassword;
 }
 ```
 
@@ -141,7 +147,7 @@ Mark a field for async validation, then register the validator at runtime:
 @FormForge()
 class MyForm {
   @AsyncValidate()
-  final String username;
+  late final String username;
 }
 
 // In your widget:
@@ -160,7 +166,7 @@ Override the default widget for any field:
 @FormForge()
 class MyForm {
   @FieldWidget(MyCustomTextField)
-  final String phone;
+  late final String phone;
 }
 ```
 
