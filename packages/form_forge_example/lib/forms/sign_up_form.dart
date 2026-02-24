@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:form_forge/form_forge.dart';
 
 part 'sign_up_form.g.dart';

@@ -20,8 +20,11 @@ jobs:
       - name: Install dependencies
         run: dart pub get
 
-      - name: Analyze
-        run: dart analyze --fatal-infos
+      - name: Analyze form_forge
+        run: dart analyze --fatal-infos packages/form_forge
+
+      - name: Analyze form_forge_generator
+        run: dart analyze --fatal-infos packages/form_forge_generator
 
       - name: Format check
         run: dart format --set-exit-if-changed .
