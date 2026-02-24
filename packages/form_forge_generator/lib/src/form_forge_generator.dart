@@ -37,7 +37,7 @@ class FormForgeGenerator extends Generator {
         );
       }
 
-      final className = element.name;
+      final className = element.name!;
       final fields = _fieldResolver.resolve(element);
 
       if (fields.isEmpty) {

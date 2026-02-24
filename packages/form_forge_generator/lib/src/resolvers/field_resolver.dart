@@ -41,7 +41,7 @@ class FieldResolver {
 
     for (final field in classElement.fields) {
       // Skip static fields and synthetic fields.
-      if (field.isStatic || field.isSynthetic) continue;
+      if (field.isStatic || !field.isOriginDeclaration) continue;
 
       fields.add(_resolveField(field));
     }
@@ -132,12 +132,12 @@ class FieldResolver {
         ? (baseType!.element as EnumElement)
             .fields
             .where((f) => f.isEnumConstant)
-            .map((f) => f.name)
+            .map((f) => f.name!)
             .toList()
         : null;
 
     return ResolvedField(
-      name: field.name,
+      name: field.name!,
       typeName: typeName,
       isNullable: isNullable,
       isEnum: isEnum,

@@ -55,14 +55,12 @@ Future<String> generate(String source) async {
     'a|lib/input.dart': source,
   };
   final builder = formForgeBuilder(BuilderOptions.empty);
-  final writer = InMemoryAssetWriter();
-  await testBuilder(builder, srcs,
+  final result = await testBuilder(builder, srcs,
       rootPackage: 'a',
-      writer: writer,
-      reader: await PackageAssetReader.currentIsolate());
-  for (final entry in writer.assets.entries) {
-    if (entry.key.package == 'a') {
-      final content = String.fromCharCodes(entry.value);
+      flattenOutput: true);
+  for (final output in result.outputs) {
+    if (output.package == 'a') {
+      final content = result.readerWriter.testing.readString(output);
       if (content.trim().isNotEmpty) return content;
     }
   }

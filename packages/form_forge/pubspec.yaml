@@ -13,7 +13,7 @@ topics:
   - widgets
 
 environment:
-  sdk: ^3.6.2
+  sdk: ^3.7.0
   flutter: '>=3.10.0'
 
 dependencies:
