@@ -12,26 +12,36 @@ const _pkg = 'package:form_forge';
 /// Reads all instance fields, extracts their types, nullability,
 /// and all form_forge validator annotations.
 class FieldResolver {
-  static final _isRequiredChecker =
-      TypeChecker.fromUrl('$_pkg/src/annotations/validators/is_required.dart#IsRequired');
-  static final _isEmailChecker =
-      TypeChecker.fromUrl('$_pkg/src/annotations/validators/is_email.dart#IsEmail');
-  static final _minLengthChecker =
-      TypeChecker.fromUrl('$_pkg/src/annotations/validators/min_length.dart#MinLength');
-  static final _maxLengthChecker =
-      TypeChecker.fromUrl('$_pkg/src/annotations/validators/max_length.dart#MaxLength');
-  static final _patternChecker =
-      TypeChecker.fromUrl('$_pkg/src/annotations/validators/pattern.dart#PatternValidator');
-  static final _minChecker =
-      TypeChecker.fromUrl('$_pkg/src/annotations/validators/min.dart#Min');
-  static final _maxChecker =
-      TypeChecker.fromUrl('$_pkg/src/annotations/validators/max.dart#Max');
-  static final _mustMatchChecker =
-      TypeChecker.fromUrl('$_pkg/src/annotations/validators/must_match.dart#MustMatch');
-  static final _asyncValidateChecker =
-      TypeChecker.fromUrl('$_pkg/src/annotations/validators/async_validator.dart#AsyncValidate');
-  static final _fieldWidgetChecker =
-      TypeChecker.fromUrl('$_pkg/src/annotations/field_widget.dart#FieldWidget');
+  static final _isRequiredChecker = TypeChecker.fromUrl(
+    '$_pkg/src/annotations/validators/is_required.dart#IsRequired',
+  );
+  static final _isEmailChecker = TypeChecker.fromUrl(
+    '$_pkg/src/annotations/validators/is_email.dart#IsEmail',
+  );
+  static final _minLengthChecker = TypeChecker.fromUrl(
+    '$_pkg/src/annotations/validators/min_length.dart#MinLength',
+  );
+  static final _maxLengthChecker = TypeChecker.fromUrl(
+    '$_pkg/src/annotations/validators/max_length.dart#MaxLength',
+  );
+  static final _patternChecker = TypeChecker.fromUrl(
+    '$_pkg/src/annotations/validators/pattern.dart#PatternValidator',
+  );
+  static final _minChecker = TypeChecker.fromUrl(
+    '$_pkg/src/annotations/validators/min.dart#Min',
+  );
+  static final _maxChecker = TypeChecker.fromUrl(
+    '$_pkg/src/annotations/validators/max.dart#Max',
+  );
+  static final _mustMatchChecker = TypeChecker.fromUrl(
+    '$_pkg/src/annotations/validators/must_match.dart#MustMatch',
+  );
+  static final _asyncValidateChecker = TypeChecker.fromUrl(
+    '$_pkg/src/annotations/validators/async_validator.dart#AsyncValidate',
+  );
+  static final _fieldWidgetChecker = TypeChecker.fromUrl(
+    '$_pkg/src/annotations/field_widget.dart#FieldWidget',
+  );
 
   /// Resolves all instance fields from the given [classElement].
   ///
@@ -68,40 +78,33 @@ class FieldResolver {
 
     // MinLength
     final minLengthAnnotation = _minLengthChecker.firstAnnotationOf(field);
-    final minLength =
-        minLengthAnnotation?.getField('length')?.toIntValue();
+    final minLength = minLengthAnnotation?.getField('length')?.toIntValue();
     final minLengthMessage =
         minLengthAnnotation?.getField('message')?.toStringValue();
 
     // MaxLength
     final maxLengthAnnotation = _maxLengthChecker.firstAnnotationOf(field);
-    final maxLength =
-        maxLengthAnnotation?.getField('length')?.toIntValue();
+    final maxLength = maxLengthAnnotation?.getField('length')?.toIntValue();
     final maxLengthMessage =
         maxLengthAnnotation?.getField('message')?.toStringValue();
 
     // Pattern
     final patternAnnotation = _patternChecker.firstAnnotationOf(field);
-    final pattern =
-        patternAnnotation?.getField('pattern')?.toStringValue();
+    final pattern = patternAnnotation?.getField('pattern')?.toStringValue();
     final patternMessage =
         patternAnnotation?.getField('message')?.toStringValue();
 
     // Min
     final minAnnotation = _minChecker.firstAnnotationOf(field);
     final minValue = minAnnotation?.getField('value');
-    final num? min = minValue?.toIntValue() ??
-        minValue?.toDoubleValue();
-    final minMessage =
-        minAnnotation?.getField('message')?.toStringValue();
+    final num? min = minValue?.toIntValue() ?? minValue?.toDoubleValue();
+    final minMessage = minAnnotation?.getField('message')?.toStringValue();
 
     // Max
     final maxAnnotation = _maxChecker.firstAnnotationOf(field);
     final maxValue = maxAnnotation?.getField('value');
-    final num? max = maxValue?.toIntValue() ??
-        maxValue?.toDoubleValue();
-    final maxMessage =
-        maxAnnotation?.getField('message')?.toStringValue();
+    final num? max = maxValue?.toIntValue() ?? maxValue?.toDoubleValue();
+    final maxMessage = maxAnnotation?.getField('message')?.toStringValue();
 
     // MustMatch
     final mustMatchAnnotation = _mustMatchChecker.firstAnnotationOf(field);
@@ -118,23 +121,23 @@ class FieldResolver {
 
     // FieldWidget
     final widgetAnnotation = _fieldWidgetChecker.firstAnnotationOf(field);
-    final customWidgetType = widgetAnnotation
-        ?.getField('widgetType')
-        ?.toTypeValue()
-        ?.getDisplayString();
+    final customWidgetType =
+        widgetAnnotation
+            ?.getField('widgetType')
+            ?.toTypeValue()
+            ?.getDisplayString();
 
     // Detect enum types
-    final baseType = field.type is InterfaceType
-        ? (field.type as InterfaceType)
-        : null;
+    final baseType =
+        field.type is InterfaceType ? (field.type as InterfaceType) : null;
     final isEnum = baseType?.element is EnumElement;
-    final enumValues = isEnum
-        ? (baseType!.element as EnumElement)
-            .fields
-            .where((f) => f.isEnumConstant)
-            .map((f) => f.name!)
-            .toList()
-        : null;
+    final enumValues =
+        isEnum
+            ? (baseType!.element as EnumElement).fields
+                .where((f) => f.isEnumConstant)
+                .map((f) => f.name!)
+                .toList()
+            : null;
 
     return ResolvedField(
       name: field.name!,

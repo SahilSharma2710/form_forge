@@ -48,10 +48,17 @@ final _formForgeSources = <String, String>{
 };
 
 Future<String> generate(String source) async {
-  final srcs = <String, String>{..._formForgeSources, 'a|lib/input.dart': source};
+  final srcs = <String, String>{
+    ..._formForgeSources,
+    'a|lib/input.dart': source,
+  };
   final builder = formForgeBuilder(BuilderOptions.empty);
-  final result = await testBuilder(builder, srcs, rootPackage: 'a',
-      flattenOutput: true);
+  final result = await testBuilder(
+    builder,
+    srcs,
+    rootPackage: 'a',
+    flattenOutput: true,
+  );
   for (final output in result.outputs) {
     if (output.package == 'a') {
       final content = result.readerWriter.testing.readString(output);
@@ -82,8 +89,10 @@ void main() {
         // by the generator through the FieldResolver
       });
 
-      test('generator processes fields with standard validators correctly', () async {
-        final result = await generate('''
+      test(
+        'generator processes fields with standard validators correctly',
+        () async {
+          final result = await generate('''
           import 'package:form_forge/form_forge.dart';
 
           @FormForge()
@@ -95,12 +104,13 @@ void main() {
           }
         ''');
 
-        // Verify the form generates correctly — extensibility is about
-        // the architecture allowing custom validators and widgets
-        expect(result, contains('ExtensibleFormController'));
-        expect(result, contains('ExtensibleFormWidget'));
-        expect(result, contains('ExtensibleFormData'));
-      });
+          // Verify the form generates correctly — extensibility is about
+          // the architecture allowing custom validators and widgets
+          expect(result, contains('ExtensibleFormController'));
+          expect(result, contains('ExtensibleFormWidget'));
+          expect(result, contains('ExtensibleFormData'));
+        },
+      );
     });
   });
 }

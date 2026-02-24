@@ -48,10 +48,17 @@ final _formForgeSources = <String, String>{
 };
 
 Future<String> generate(String source) async {
-  final srcs = <String, String>{..._formForgeSources, 'a|lib/input.dart': source};
+  final srcs = <String, String>{
+    ..._formForgeSources,
+    'a|lib/input.dart': source,
+  };
   final builder = formForgeBuilder(BuilderOptions.empty);
-  final result = await testBuilder(builder, srcs, rootPackage: 'a',
-      flattenOutput: true);
+  final result = await testBuilder(
+    builder,
+    srcs,
+    rootPackage: 'a',
+    flattenOutput: true,
+  );
   for (final output in result.outputs) {
     if (output.package == 'a') {
       final content = result.readerWriter.testing.readString(output);

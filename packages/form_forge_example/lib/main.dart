@@ -12,14 +12,9 @@ class FormForgeExampleApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'form_forge Examples',
-      theme: ThemeData(
-        colorSchemeSeed: Colors.deepPurple,
-        useMaterial3: true,
-      ),
+      theme: ThemeData(colorSchemeSeed: Colors.deepPurple, useMaterial3: true),
       home: const Scaffold(
-        body: Center(
-          child: Text('form_forge examples coming soon'),
-        ),
+        body: Center(child: Text('form_forge examples coming soon')),
       ),
     );
   }

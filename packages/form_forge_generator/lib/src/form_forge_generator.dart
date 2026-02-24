@@ -26,8 +26,7 @@ class FormForgeGenerator extends Generator {
   FutureOr<String?> generate(LibraryReader library, BuildStep buildStep) {
     final buffer = StringBuffer();
 
-    for (final annotatedElement
-        in library.annotatedWith(_formForgeChecker)) {
+    for (final annotatedElement in library.annotatedWith(_formForgeChecker)) {
       final element = annotatedElement.element;
 
       if (element is! ClassElement) {
@@ -63,21 +62,19 @@ class FormForgeGenerator extends Generator {
   ) {
     final controllerName = '${_generatedPrefix(className)}FormController';
 
-    final asyncFields =
-        fields.where((f) => f.hasAsyncValidator).toList();
+    final asyncFields = fields.where((f) => f.hasAsyncValidator).toList();
 
     buffer.writeln('/// Generated form controller for [$className].');
-    buffer.writeln(
-        'class $controllerName extends FormForgeController {');
+    buffer.writeln('class $controllerName extends FormForgeController {');
 
     // Field declarations
     for (final field in fields) {
-      final dartType =
-          field.isNullable ? '${field.typeName}?' : field.typeName;
+      final dartType = field.isNullable ? '${field.typeName}?' : field.typeName;
       final defaultValue = _defaultValueFor(field);
       buffer.writeln(
-          '  final ForgeFieldState<$dartType> ${field.name} = '
-          'ForgeFieldState<$dartType>(initialValue: $defaultValue);');
+        '  final ForgeFieldState<$dartType> ${field.name} = '
+        'ForgeFieldState<$dartType>(initialValue: $defaultValue);',
+      );
     }
     buffer.writeln();
 
@@ -116,17 +113,19 @@ class FormForgeGenerator extends Generator {
     final crossFieldFields =
         fields.where((f) => f.hasCrossFieldValidation).toList();
     if (crossFieldFields.isNotEmpty) {
-      buffer.writeln(
-          '  /// Validates cross-field constraints (Phase 2).');
+      buffer.writeln('  /// Validates cross-field constraints (Phase 2).');
       buffer.writeln('  void validateCrossFields() {');
       for (final field in crossFieldFields) {
-        final msg = field.mustMatchMessage ??
-            'Must match ${field.mustMatchField}';
+        final msg =
+            field.mustMatchMessage ?? 'Must match ${field.mustMatchField}';
         buffer.writeln(
-            '    if (${field.name}.value != ${field.mustMatchField}.value) {');
+          '    if (${field.name}.value != ${field.mustMatchField}.value) {',
+        );
         buffer.writeln("      ${field.name}.error = '$msg';");
-        buffer.writeln('    } else if (${field.name}.error == '
-            "'$msg') {");
+        buffer.writeln(
+          '    } else if (${field.name}.error == '
+          "'$msg') {",
+        );
         buffer.writeln('      ${field.name}.error = null;');
         buffer.writeln('    }');
       }
@@ -137,36 +136,37 @@ class FormForgeGenerator extends Generator {
     // Async validation infrastructure (Phase 3)
     if (asyncFields.isNotEmpty) {
       buffer.writeln('  // Async validation state');
-      buffer.writeln(
-          '  final Map<String, Timer?> _debounceTimers = {};');
-      buffer.writeln(
-          '  final Map<String, bool> _isFieldValidating = {};');
+      buffer.writeln('  final Map<String, Timer?> _debounceTimers = {};');
+      buffer.writeln('  final Map<String, bool> _isFieldValidating = {};');
       buffer.writeln();
       buffer.writeln(
-          '  /// Whether any field is currently running async validation.');
+        '  /// Whether any field is currently running async validation.',
+      );
       buffer.writeln(
-          '  bool get isValidating => _isFieldValidating.values.any((v) => v);');
+        '  bool get isValidating => _isFieldValidating.values.any((v) => v);',
+      );
       buffer.writeln();
 
       // Async validation method
       buffer.writeln(
-          '  /// Runs async validators for all fields that have them.');
-      buffer.writeln(
-          '  Future<void> validateAsync() async {');
+        '  /// Runs async validators for all fields that have them.',
+      );
+      buffer.writeln('  Future<void> validateAsync() async {');
       buffer.writeln('    final futures = <Future<void>>[];');
       for (final field in asyncFields) {
         buffer.writeln(
-            '    if (_asyncValidators.containsKey(\'${field.name}\')) {');
-        buffer.writeln(
-            '      _isFieldValidating[\'${field.name}\'] = true;');
+          '    if (_asyncValidators.containsKey(\'${field.name}\')) {',
+        );
+        buffer.writeln('      _isFieldValidating[\'${field.name}\'] = true;');
         buffer.writeln('      notifyListeners();');
         buffer.writeln(
-            '      futures.add(_asyncValidators[\'${field.name}\']!'
-            '(${field.name}.value).then((error) {');
+          '      futures.add(_asyncValidators[\'${field.name}\']!'
+          '(${field.name}.value).then((error) {',
+        );
+        buffer.writeln('        ${field.name}.error = error;');
         buffer.writeln(
-            '        ${field.name}.error = error;');
-        buffer.writeln(
-            '        _isFieldValidating[\'${field.name}\'] = false;');
+          '        _isFieldValidating[\'${field.name}\'] = false;',
+        );
         buffer.writeln('        notifyListeners();');
         buffer.writeln('      }));');
         buffer.writeln('    }');
@@ -176,28 +176,27 @@ class FormForgeGenerator extends Generator {
       buffer.writeln();
 
       // Debounced async trigger
+      buffer.writeln('  /// Triggers debounced async validation for a field.');
       buffer.writeln(
-          '  /// Triggers debounced async validation for a field.');
+        '  void _triggerAsyncValidation(String fieldName, dynamic value, int debounceMs) {',
+      );
+      buffer.writeln('    _debounceTimers[fieldName]?.cancel();');
       buffer.writeln(
-          '  void _triggerAsyncValidation(String fieldName, dynamic value, int debounceMs) {');
-      buffer.writeln(
-          '    _debounceTimers[fieldName]?.cancel();');
-      buffer.writeln(
-          '    _debounceTimers[fieldName] = Timer(Duration(milliseconds: debounceMs), () {');
-      buffer.writeln(
-          '      if (_asyncValidators.containsKey(fieldName)) {');
-      buffer.writeln(
-          '        _isFieldValidating[fieldName] = true;');
+        '    _debounceTimers[fieldName] = Timer(Duration(milliseconds: debounceMs), () {',
+      );
+      buffer.writeln('      if (_asyncValidators.containsKey(fieldName)) {');
+      buffer.writeln('        _isFieldValidating[fieldName] = true;');
       buffer.writeln('        notifyListeners();');
       buffer.writeln(
-          '        _asyncValidators[fieldName]!(value).then((error) {');
+        '        _asyncValidators[fieldName]!(value).then((error) {',
+      );
       buffer.writeln('          // Find field by name and set error');
       for (final field in asyncFields) {
         buffer.writeln(
-            "          if (fieldName == '${field.name}') ${field.name}.error = error;");
+          "          if (fieldName == '${field.name}') ${field.name}.error = error;",
+        );
       }
-      buffer.writeln(
-          '          _isFieldValidating[fieldName] = false;');
+      buffer.writeln('          _isFieldValidating[fieldName] = false;');
       buffer.writeln('          notifyListeners();');
       buffer.writeln('        });');
       buffer.writeln('      }');
@@ -207,23 +206,23 @@ class FormForgeGenerator extends Generator {
 
       // Async validator registry
       buffer.writeln(
-          '  /// Registry for async validator functions. Set these before using the form.');
+        '  /// Registry for async validator functions. Set these before using the form.',
+      );
       buffer.writeln(
-          '  final Map<String, Future<String?> Function(dynamic)> _asyncValidators = {};');
+        '  final Map<String, Future<String?> Function(dynamic)> _asyncValidators = {};',
+      );
       buffer.writeln();
+      buffer.writeln('  /// Registers an async validator for a field.');
       buffer.writeln(
-          '  /// Registers an async validator for a field.');
-      buffer.writeln(
-          '  void registerAsyncValidator(String fieldName, Future<String?> Function(dynamic) validator) {');
-      buffer.writeln(
-          '    _asyncValidators[fieldName] = validator;');
+        '  void registerAsyncValidator(String fieldName, Future<String?> Function(dynamic) validator) {',
+      );
+      buffer.writeln('    _asyncValidators[fieldName] = validator;');
       buffer.writeln('  }');
       buffer.writeln();
     }
 
     // validateAll method
-    final validatedFields =
-        fields.where((f) => f.hasSyncValidators).toList();
+    final validatedFields = fields.where((f) => f.hasSyncValidators).toList();
     final hasAnyValidation =
         validatedFields.isNotEmpty || crossFieldFields.isNotEmpty;
     if (hasAnyValidation) {
@@ -253,9 +252,11 @@ class FormForgeGenerator extends Generator {
 
     // Submit method
     buffer.writeln(
-        '  /// Validates all fields and calls [onSubmit] with typed form data if valid.');
+      '  /// Validates all fields and calls [onSubmit] with typed form data if valid.',
+    );
     buffer.writeln(
-        '  Future<void> submit(Future<void> Function($dataClassName data) onSubmit) async {');
+      '  Future<void> submit(Future<void> Function($dataClassName data) onSubmit) async {',
+    );
     if (hasAnyValidation) {
       buffer.writeln('    validateAll();');
     }
@@ -293,8 +294,7 @@ class FormForgeGenerator extends Generator {
 
     // Fields
     for (final field in fields) {
-      final dartType =
-          field.isNullable ? '${field.typeName}?' : field.typeName;
+      final dartType = field.isNullable ? '${field.typeName}?' : field.typeName;
       buffer.writeln('  final $dartType ${field.name};');
     }
     buffer.writeln();
@@ -314,11 +314,11 @@ class FormForgeGenerator extends Generator {
     final methodName =
         'validate${field.name[0].toUpperCase()}${field.name.substring(1)}';
     final isStringType = field.typeName == 'String';
-    final paramType =
-        field.isNullable ? '${field.typeName}?' : field.typeName;
+    final paramType = field.isNullable ? '${field.typeName}?' : field.typeName;
 
     buffer.writeln(
-        '  /// Validates [${field.name}] against its annotation constraints.');
+      '  /// Validates [${field.name}] against its annotation constraints.',
+    );
     buffer.writeln('  void $methodName($paramType value) {');
 
     // IsRequired
@@ -334,8 +334,12 @@ class FormForgeGenerator extends Generator {
         // Non-nullable, non-string (int, double, bool, enum, DateTime):
         // These always have a default value, so required is inherently satisfied.
         // Skip the check — the field always has a value.
-        buffer.writeln("    // Required check skipped: non-nullable ${field.typeName} always has a value.");
-        buffer.writeln("    // Consider making the field nullable if you need an 'unset' state.");
+        buffer.writeln(
+          "    // Required check skipped: non-nullable ${field.typeName} always has a value.",
+        );
+        buffer.writeln(
+          "    // Consider making the field nullable if you need an 'unset' state.",
+        );
       }
       if (isStringType || field.isNullable) {
         buffer.writeln("      ${field.name}.error = '$msg';");
@@ -346,11 +350,11 @@ class FormForgeGenerator extends Generator {
 
     // IsEmail
     if (field.isEmail) {
-      final msg =
-          field.emailMessage ?? 'Please enter a valid email address';
+      final msg = field.emailMessage ?? 'Please enter a valid email address';
       buffer.writeln(
-          "    if (!RegExp(r'^[\\w\\-.]+@([\\w-]+\\.)+[\\w-]{2,4}\$')"
-          ".hasMatch(value)) {");
+        "    if (!RegExp(r'^[\\w\\-.]+@([\\w-]+\\.)+[\\w-]{2,4}\$')"
+        ".hasMatch(value)) {",
+      );
       buffer.writeln("      ${field.name}.error = '$msg';");
       buffer.writeln('      return;');
       buffer.writeln('    }');
@@ -358,10 +362,10 @@ class FormForgeGenerator extends Generator {
 
     // MinLength
     if (field.minLength != null) {
-      final msg = field.minLengthMessage ??
+      final msg =
+          field.minLengthMessage ??
           'Must be at least ${field.minLength} characters';
-      buffer.writeln(
-          '    if (value.length < ${field.minLength}) {');
+      buffer.writeln('    if (value.length < ${field.minLength}) {');
       buffer.writeln("      ${field.name}.error = '$msg';");
       buffer.writeln('      return;');
       buffer.writeln('    }');
@@ -369,10 +373,10 @@ class FormForgeGenerator extends Generator {
 
     // MaxLength
     if (field.maxLength != null) {
-      final msg = field.maxLengthMessage ??
+      final msg =
+          field.maxLengthMessage ??
           'Must be at most ${field.maxLength} characters';
-      buffer.writeln(
-          '    if (value.length > ${field.maxLength}) {');
+      buffer.writeln('    if (value.length > ${field.maxLength}) {');
       buffer.writeln("      ${field.name}.error = '$msg';");
       buffer.writeln('      return;');
       buffer.writeln('    }');
@@ -383,10 +387,12 @@ class FormForgeGenerator extends Generator {
       final msg = field.patternMessage ?? 'Invalid format';
       if (field.isNullable) {
         buffer.writeln(
-            "    if (value != null && !RegExp(r'${field.pattern}').hasMatch(value)) {");
+          "    if (value != null && !RegExp(r'${field.pattern}').hasMatch(value)) {",
+        );
       } else {
         buffer.writeln(
-            "    if (!RegExp(r'${field.pattern}').hasMatch(value)) {");
+          "    if (!RegExp(r'${field.pattern}').hasMatch(value)) {",
+        );
       }
       buffer.writeln("      ${field.name}.error = '$msg';");
       buffer.writeln('      return;');
@@ -427,24 +433,24 @@ class FormForgeGenerator extends Generator {
 
     buffer.writeln();
     buffer.writeln('/// Generated form widget for [$className].');
-    buffer.writeln(
-        'class $widgetName extends StatefulWidget {');
+    buffer.writeln('class $widgetName extends StatefulWidget {');
     buffer.writeln('  /// The form controller managing state and validation.');
     buffer.writeln('  final $controllerName controller;');
     buffer.writeln();
     buffer.writeln('  /// Creates a [$widgetName].');
     buffer.writeln(
-        '  const $widgetName({super.key, required this.controller});');
+      '  const $widgetName({super.key, required this.controller});',
+    );
     buffer.writeln();
     buffer.writeln('  @override');
     buffer.writeln(
-        '  State<$widgetName> createState() => _${widgetName}State();');
+      '  State<$widgetName> createState() => _${widgetName}State();',
+    );
     buffer.writeln('}');
     buffer.writeln();
 
     // State class
-    buffer.writeln(
-        'class _${widgetName}State extends State<$widgetName> {');
+    buffer.writeln('class _${widgetName}State extends State<$widgetName> {');
     buffer.writeln();
 
     // Per-field builder methods
@@ -461,7 +467,8 @@ class FormForgeGenerator extends Generator {
     buffer.writeln('        return Form(');
     buffer.writeln('          child: Column(');
     buffer.writeln(
-        '            crossAxisAlignment: CrossAxisAlignment.stretch,');
+      '            crossAxisAlignment: CrossAxisAlignment.stretch,',
+    );
     buffer.writeln('            children: [');
     for (final field in fields) {
       final methodName =
@@ -488,38 +495,40 @@ class FormForgeGenerator extends Generator {
 
     if (field.isEnum) {
       // Enum → DropdownButtonFormField
-      final dartType =
-          field.isNullable ? '${field.typeName}?' : field.typeName;
+      final dartType = field.isNullable ? '${field.typeName}?' : field.typeName;
       buffer.writeln('    return Padding(');
       buffer.writeln(
-          '      padding: const EdgeInsets.symmetric(vertical: 8.0),');
+        '      padding: const EdgeInsets.symmetric(vertical: 8.0),',
+      );
       buffer.writeln('      child: DropdownButtonFormField<$dartType>(');
       buffer.writeln('        decoration: InputDecoration(');
       buffer.writeln("          labelText: '$label',");
       buffer.writeln(
-          '          errorText: widget.controller.${field.name}.error,');
+        '          errorText: widget.controller.${field.name}.error,',
+      );
       buffer.writeln('        ),');
+      buffer.writeln('        value: widget.controller.${field.name}.value,');
       buffer.writeln(
-          '        value: widget.controller.${field.name}.value,');
-      buffer.writeln(
-          '        items: ${field.typeName}.values.map((e) => DropdownMenuItem(');
+        '        items: ${field.typeName}.values.map((e) => DropdownMenuItem(',
+      );
       buffer.writeln('          value: e,');
       buffer.writeln('          child: Text(e.name),');
       buffer.writeln('        )).toList(),');
       buffer.writeln('        onChanged: (v) {');
       if (field.isNullable) {
-        buffer.writeln(
-            '          widget.controller.${field.name}.value = v;');
+        buffer.writeln('          widget.controller.${field.name}.value = v;');
       } else {
         buffer.writeln('          if (v != null) {');
         buffer.writeln(
-            '            widget.controller.${field.name}.value = v;');
+          '            widget.controller.${field.name}.value = v;',
+        );
         buffer.writeln('          }');
       }
       if (field.hasAsyncValidator) {
         final debounce = field.asyncDebounceMs ?? 500;
         buffer.writeln(
-            '          widget.controller._triggerAsyncValidation(\'${field.name}\', widget.controller.${field.name}.value, $debounce);');
+          '          widget.controller._triggerAsyncValidation(\'${field.name}\', widget.controller.${field.name}.value, $debounce);',
+        );
       }
       buffer.writeln('        },');
       buffer.writeln('      ),');
@@ -528,30 +537,33 @@ class FormForgeGenerator extends Generator {
       // DateTime → Date picker
       buffer.writeln('    return Padding(');
       buffer.writeln(
-          '      padding: const EdgeInsets.symmetric(vertical: 8.0),');
+        '      padding: const EdgeInsets.symmetric(vertical: 8.0),',
+      );
       buffer.writeln('      child: InkWell(');
       buffer.writeln('        onTap: () async {');
       buffer.writeln('          final picked = await showDatePicker(');
       buffer.writeln('            context: context,');
       if (field.isNullable) {
         buffer.writeln(
-            '            initialDate: widget.controller.${field.name}.value ?? DateTime.now(),');
+          '            initialDate: widget.controller.${field.name}.value ?? DateTime.now(),',
+        );
       } else {
         buffer.writeln(
-            '            initialDate: widget.controller.${field.name}.value,');
+          '            initialDate: widget.controller.${field.name}.value,',
+        );
       }
-      buffer.writeln(
-          '            firstDate: DateTime(1900),');
-      buffer.writeln(
-          '            lastDate: DateTime(2100),');
+      buffer.writeln('            firstDate: DateTime(1900),');
+      buffer.writeln('            lastDate: DateTime(2100),');
       buffer.writeln('          );');
       buffer.writeln('          if (picked != null) {');
       buffer.writeln(
-          '            widget.controller.${field.name}.value = picked;');
+        '            widget.controller.${field.name}.value = picked;',
+      );
       if (field.hasAsyncValidator) {
         final debounce = field.asyncDebounceMs ?? 500;
         buffer.writeln(
-            '            widget.controller._triggerAsyncValidation(\'${field.name}\', widget.controller.${field.name}.value, $debounce);');
+          '            widget.controller._triggerAsyncValidation(\'${field.name}\', widget.controller.${field.name}.value, $debounce);',
+        );
       }
       buffer.writeln('          }');
       buffer.writeln('        },');
@@ -559,14 +571,17 @@ class FormForgeGenerator extends Generator {
       buffer.writeln('          decoration: InputDecoration(');
       buffer.writeln("            labelText: '$label',");
       buffer.writeln(
-          '            errorText: widget.controller.${field.name}.error,');
+        '            errorText: widget.controller.${field.name}.error,',
+      );
       buffer.writeln('          ),');
       if (field.isNullable) {
         buffer.writeln(
-            "          child: Text(widget.controller.${field.name}.value?.toString().split(' ').first ?? 'Select date'),");
+          "          child: Text(widget.controller.${field.name}.value?.toString().split(' ').first ?? 'Select date'),",
+        );
       } else {
         buffer.writeln(
-            "          child: Text(widget.controller.${field.name}.value.toString().split(' ').first),");
+          "          child: Text(widget.controller.${field.name}.value.toString().split(' ').first),",
+        );
       }
       buffer.writeln('        ),');
       buffer.writeln('      ),');
@@ -576,15 +591,16 @@ class FormForgeGenerator extends Generator {
         case 'bool':
           buffer.writeln('    return CheckboxListTile(');
           buffer.writeln("      title: Text('$label'),");
-          buffer.writeln(
-              '      value: widget.controller.${field.name}.value,');
+          buffer.writeln('      value: widget.controller.${field.name}.value,');
           buffer.writeln('      onChanged: (v) {');
           buffer.writeln(
-              '        widget.controller.${field.name}.value = v ?? false;');
+            '        widget.controller.${field.name}.value = v ?? false;',
+          );
           if (field.hasAsyncValidator) {
             final debounce = field.asyncDebounceMs ?? 500;
             buffer.writeln(
-                '        widget.controller._triggerAsyncValidation(\'${field.name}\', widget.controller.${field.name}.value, $debounce);');
+              '        widget.controller._triggerAsyncValidation(\'${field.name}\', widget.controller.${field.name}.value, $debounce);',
+            );
           }
           buffer.writeln('      },');
           buffer.writeln('    );');
@@ -593,28 +609,34 @@ class FormForgeGenerator extends Generator {
         case 'double':
           buffer.writeln('    return Padding(');
           buffer.writeln(
-              '      padding: const EdgeInsets.symmetric(vertical: 8.0),');
+            '      padding: const EdgeInsets.symmetric(vertical: 8.0),',
+          );
           buffer.writeln('      child: TextFormField(');
           buffer.writeln('        keyboardType: TextInputType.number,');
           buffer.writeln('        decoration: InputDecoration(');
           buffer.writeln("          labelText: '$label',");
           buffer.writeln(
-              '          errorText: widget.controller.${field.name}.error,');
+            '          errorText: widget.controller.${field.name}.error,',
+          );
           buffer.writeln('        ),');
           buffer.writeln(
-              "        initialValue: widget.controller.${field.name}.value.toString(),");
+            "        initialValue: widget.controller.${field.name}.value.toString(),",
+          );
           buffer.writeln('        onChanged: (v) {');
           if (field.typeName == 'int') {
             buffer.writeln(
-                '          widget.controller.${field.name}.value = int.tryParse(v) ?? 0;');
+              '          widget.controller.${field.name}.value = int.tryParse(v) ?? 0;',
+            );
           } else {
             buffer.writeln(
-                '          widget.controller.${field.name}.value = double.tryParse(v) ?? 0.0;');
+              '          widget.controller.${field.name}.value = double.tryParse(v) ?? 0.0;',
+            );
           }
           if (field.hasAsyncValidator) {
             final debounce = field.asyncDebounceMs ?? 500;
             buffer.writeln(
-                '          widget.controller._triggerAsyncValidation(\'${field.name}\', widget.controller.${field.name}.value, $debounce);');
+              '          widget.controller._triggerAsyncValidation(\'${field.name}\', widget.controller.${field.name}.value, $debounce);',
+            );
           }
           buffer.writeln('        },');
           buffer.writeln('      ),');
@@ -624,20 +646,24 @@ class FormForgeGenerator extends Generator {
           // String and other types — TextFormField
           buffer.writeln('    return Padding(');
           buffer.writeln(
-              '      padding: const EdgeInsets.symmetric(vertical: 8.0),');
+            '      padding: const EdgeInsets.symmetric(vertical: 8.0),',
+          );
           buffer.writeln('      child: TextFormField(');
           buffer.writeln('        decoration: InputDecoration(');
           buffer.writeln("          labelText: '$label',");
           buffer.writeln(
-              '          errorText: widget.controller.${field.name}.error,');
+            '          errorText: widget.controller.${field.name}.error,',
+          );
           buffer.writeln('        ),');
           buffer.writeln('        onChanged: (v) {');
           buffer.writeln(
-              '          widget.controller.${field.name}.value = v;');
+            '          widget.controller.${field.name}.value = v;',
+          );
           if (field.hasAsyncValidator) {
             final debounce = field.asyncDebounceMs ?? 500;
             buffer.writeln(
-                '          widget.controller._triggerAsyncValidation(\'${field.name}\', widget.controller.${field.name}.value, $debounce);');
+              '          widget.controller._triggerAsyncValidation(\'${field.name}\', widget.controller.${field.name}.value, $debounce);',
+            );
           }
           buffer.writeln('        },');
           buffer.writeln('      ),');
@@ -681,7 +707,9 @@ class FormForgeGenerator extends Generator {
       case 'DateTime':
         return 'DateTime.now()';
       default:
-        if (field.isEnum && field.enumValues != null && field.enumValues!.isNotEmpty) {
+        if (field.isEnum &&
+            field.enumValues != null &&
+            field.enumValues!.isNotEmpty) {
           return '${field.typeName}.${field.enumValues!.first}';
         }
         return 'null';
