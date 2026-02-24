@@ -10,8 +10,10 @@ void main() {
     });
 
     test('can be constructed with custom message', () {
-      const annotation =
-          PatternValidator(r'^[a-z]+$', message: 'Lowercase only');
+      const annotation = PatternValidator(
+        r'^[a-z]+$',
+        message: 'Lowercase only',
+      );
       expect(annotation.pattern, equals(r'^[a-z]+$'));
       expect(annotation.message, equals('Lowercase only'));
     });

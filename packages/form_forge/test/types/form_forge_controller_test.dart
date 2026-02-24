@@ -3,10 +3,12 @@ import 'package:form_forge/form_forge.dart';
 
 /// Test controller to verify base class behavior.
 class _TestFormController extends FormForgeController {
-  final ForgeFieldState<String> name =
-      ForgeFieldState<String>(initialValue: '');
-  final ForgeFieldState<String> email =
-      ForgeFieldState<String>(initialValue: '');
+  final ForgeFieldState<String> name = ForgeFieldState<String>(
+    initialValue: '',
+  );
+  final ForgeFieldState<String> email = ForgeFieldState<String>(
+    initialValue: '',
+  );
 
   _TestFormController() {
     initializeFields();
@@ -16,10 +18,7 @@ class _TestFormController extends FormForgeController {
   List<ForgeFieldState<Object?>> get fields => [name, email];
 
   @override
-  Map<String, String?> get errors => {
-        'name': name.error,
-        'email': email.error,
-      };
+  Map<String, String?> get errors => {'name': name.error, 'email': email.error};
 }
 
 void main() {

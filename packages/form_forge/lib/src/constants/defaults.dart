@@ -9,12 +9,10 @@ class FormForgeDefaults {
   static const String email = 'Please enter a valid email address';
 
   /// Default error for [MinLength]. Use [minLengthMessage] for formatted version.
-  static String minLength(int length) =>
-      'Must be at least $length characters';
+  static String minLength(int length) => 'Must be at least $length characters';
 
   /// Default error for [MaxLength]. Use [maxLengthMessage] for formatted version.
-  static String maxLength(int length) =>
-      'Must be at most $length characters';
+  static String maxLength(int length) => 'Must be at most $length characters';
 
   /// Default error for [PatternValidator].
   static const String pattern = 'Invalid format';

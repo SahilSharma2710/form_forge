@@ -35,7 +35,5 @@ class AsyncValidate {
   final int debounceMs;
 
   /// Creates an [AsyncValidate] marker annotation with optional [debounceMs].
-  const AsyncValidate({
-    this.debounceMs = FormForgeDefaults.asyncDebounceMs,
-  });
+  const AsyncValidate({this.debounceMs = FormForgeDefaults.asyncDebounceMs});
 }

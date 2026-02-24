@@ -19,8 +19,8 @@ class ForgeFieldState<T> extends ChangeNotifier {
 
   /// Creates a [ForgeFieldState] with the given [initialValue].
   ForgeFieldState({required T initialValue})
-      : _value = initialValue,
-        _initialValue = initialValue;
+    : _value = initialValue,
+      _initialValue = initialValue;
 
   /// The current value of the field.
   T get value => _value;

@@ -10,8 +10,7 @@ void main() {
     });
 
     test('can be constructed with custom message', () {
-      const annotation =
-          MustMatch('password', message: 'Passwords must match');
+      const annotation = MustMatch('password', message: 'Passwords must match');
       expect(annotation.field, equals('password'));
       expect(annotation.message, equals('Passwords must match'));
     });
