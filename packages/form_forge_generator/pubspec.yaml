@@ -2,7 +2,7 @@ name: form_forge_generator
 description: >-
   Code generator for form_forge. Processes @FormForge() annotations and
   generates FormController and FormWidget classes via build_runner.
-version: 1.0.0
+version: 1.0.1
 homepage: https://github.com/SahilSharma2710/form_forge
 repository: https://github.com/SahilSharma2710/form_forge
 topics:
