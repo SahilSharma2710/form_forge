@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] - 2026-02-27
+
+### Added
+
+- **Multi-step wizard forms**: Generate `Stepper`-based widgets for forms with `@FormStep` fields
+  - Step navigation: `currentStep`, `nextStep()`, `previousStep()`, `canGoNext`, `canGoBack`
+  - Per-step validation: `validateCurrentStep()`
+  - Step titles from annotation
+- **Conditional field visibility**: Generate `_shouldShowFieldName()` helpers for `@ShowWhen` fields
+- **Field grouping**: Generate grouped layouts with section headers for `@FieldGroup` fields
+- **New field type widgets**:
+  - `@PhoneNumber` → `TextFormField` with phone keyboard and validation
+  - `@SearchableDropdown` → `Autocomplete` widget for enums
+  - `@DateRange` → `showDateRangePicker` integration
+  - `@Slider` → `Slider` widget with configurable range and divisions
+  - `@RatingInput` → Star rating row with `IconButton`s
+  - `@ChipsInput` → `Wrap` with `Chip` and `ActionChip` for adding tags
+  - `@ColorPicker` → Color preview with dialog picker
+  - `@RichText` → `TextFormField` with `minLines`/`maxLines`
+- **Serialization**: Generate `toJson()` and `fromJson()` methods on controllers
+- **Data class enhancements**: Generate `toJson()`, `fromJson()`, and `copyWith()` on data classes
+- **Theme support**: Generated widgets read `FormForgeTheme.of(context)` for styling
+- **Persistence**: Generate `_loadPersistedData()` and `_persistData()` for `persistKey` forms
+- **Focus management**: Generate `FocusNode` per field with `focusNextField()` and proper disposal
+- **Async loading indicator**: Show `CircularProgressIndicator` suffix during async validation
+- **Enabled state**: Generated validators check `isEnabled` before validating
+- **`copyWith()`** and **`populateFrom()`** methods on controllers
+
+### Changed
+
+- Updated to `form_forge: ^1.0.0`
+- Async validation now uses `field.isValidating` instead of separate map
+
 ## [0.1.2] - 2026-02-24
 
 ### Changed

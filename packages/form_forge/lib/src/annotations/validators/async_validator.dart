@@ -10,6 +10,7 @@ typedef AsyncValidatorFn = Future<String?> Function(dynamic value);
 ///
 /// Async validators run after sync validators pass (Phase 3 of validation
 /// pipeline). They are automatically debounced to avoid excessive API calls.
+/// A loading indicator is shown while validation is in progress.
 ///
 /// Register the actual validator function at runtime via
 /// `controller.registerAsyncValidator('fieldName', validatorFn)`.
@@ -18,8 +19,12 @@ typedef AsyncValidatorFn = Future<String?> Function(dynamic value);
 /// @AsyncValidate()
 /// final String email;
 ///
-/// @AsyncValidate(debounceMs: 1000)
+/// @AsyncValidate(debounce: Duration(seconds: 1))
 /// final String username;
+///
+/// // Legacy support: using milliseconds directly
+/// @AsyncValidate(debounceMs: 1000)
+/// final String legacyField;
 /// ```
 ///
 /// Then in your widget:
@@ -31,9 +36,25 @@ typedef AsyncValidatorFn = Future<String?> Function(dynamic value);
 /// });
 /// ```
 class AsyncValidate {
+  /// Debounce delay as Duration before triggering validation.
+  ///
+  /// If provided, takes precedence over [debounceMs].
+  final Duration? debounce;
+
   /// Debounce delay in milliseconds before triggering validation.
+  ///
+  /// Deprecated: Use [debounce] instead.
   final int debounceMs;
 
-  /// Creates an [AsyncValidate] marker annotation with optional [debounceMs].
-  const AsyncValidate({this.debounceMs = FormForgeDefaults.asyncDebounceMs});
+  /// Creates an [AsyncValidate] marker annotation.
+  ///
+  /// Use [debounce] for Duration-based debounce, or [debounceMs] for
+  /// milliseconds (legacy support).
+  const AsyncValidate({
+    this.debounce,
+    this.debounceMs = FormForgeDefaults.asyncDebounceMs,
+  });
+
+  /// Returns the effective debounce duration in milliseconds.
+  int get effectiveDebounceMs => debounce?.inMilliseconds ?? debounceMs;
 }

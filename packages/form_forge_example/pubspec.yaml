@@ -1,10 +1,10 @@
 name: form_forge_example
 description: Example Flutter app demonstrating form_forge usage.
-version: 0.1.0
+version: 1.0.0
 publish_to: none
 
 environment:
-  sdk: ^3.7.0
+  sdk: ^3.6.0
   flutter: '>=3.10.0'
 
 dependencies:
@@ -12,6 +12,7 @@ dependencies:
     sdk: flutter
   form_forge:
     path: ../form_forge
+  shared_preferences: ^2.2.0
 
 dev_dependencies:
   flutter_test:

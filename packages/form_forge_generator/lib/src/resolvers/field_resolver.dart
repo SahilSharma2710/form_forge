@@ -12,6 +12,7 @@ const _pkg = 'package:form_forge';
 /// Reads all instance fields, extracts their types, nullability,
 /// and all form_forge validator annotations.
 class FieldResolver {
+  // Validator checkers
   static final _isRequiredChecker = TypeChecker.fromUrl(
     '$_pkg/src/annotations/validators/is_required.dart#IsRequired',
   );
@@ -43,6 +44,43 @@ class FieldResolver {
     '$_pkg/src/annotations/field_widget.dart#FieldWidget',
   );
 
+  // New v1.0.0 annotation checkers
+  static final _formStepChecker = TypeChecker.fromUrl(
+    '$_pkg/src/annotations/form_step.dart#FormStep',
+  );
+  static final _showWhenChecker = TypeChecker.fromUrl(
+    '$_pkg/src/annotations/show_when.dart#ShowWhen',
+  );
+  static final _fieldGroupChecker = TypeChecker.fromUrl(
+    '$_pkg/src/annotations/field_group.dart#FieldGroup',
+  );
+
+  // Field type annotation checkers
+  static final _phoneNumberChecker = TypeChecker.fromUrl(
+    '$_pkg/src/annotations/field_types/phone_number.dart#PhoneNumber',
+  );
+  static final _searchableDropdownChecker = TypeChecker.fromUrl(
+    '$_pkg/src/annotations/field_types/searchable_dropdown.dart#SearchableDropdown',
+  );
+  static final _dateRangeChecker = TypeChecker.fromUrl(
+    '$_pkg/src/annotations/field_types/date_range.dart#DateRange',
+  );
+  static final _sliderChecker = TypeChecker.fromUrl(
+    '$_pkg/src/annotations/field_types/slider_input.dart#SliderInput',
+  );
+  static final _ratingInputChecker = TypeChecker.fromUrl(
+    '$_pkg/src/annotations/field_types/rating_input.dart#RatingInput',
+  );
+  static final _chipsInputChecker = TypeChecker.fromUrl(
+    '$_pkg/src/annotations/field_types/chips_input.dart#ChipsInput',
+  );
+  static final _colorPickerChecker = TypeChecker.fromUrl(
+    '$_pkg/src/annotations/field_types/color_picker.dart#ColorPicker',
+  );
+  static final _richTextChecker = TypeChecker.fromUrl(
+    '$_pkg/src/annotations/field_types/rich_text_input.dart#RichTextInput',
+  );
+
   /// Resolves all instance fields from the given [classElement].
   ///
   /// Returns a list of [ResolvedField] with all annotations extracted.
@@ -51,7 +89,7 @@ class FieldResolver {
 
     for (final field in classElement.fields) {
       // Skip static fields and synthetic fields.
-      if (field.isStatic || !field.isOriginDeclaration) continue;
+      if (field.isStatic || field.isSynthetic) continue;
 
       fields.add(_resolveField(field));
     }
@@ -116,31 +154,130 @@ class FieldResolver {
     // AsyncValidate
     final asyncAnnotation = _asyncValidateChecker.firstAnnotationOf(field);
     final hasAsyncValidator = asyncAnnotation != null;
-    final asyncDebounceMs =
-        asyncAnnotation?.getField('debounceMs')?.toIntValue();
+    int? asyncDebounceMs;
+    if (asyncAnnotation != null) {
+      // Check for Duration-based debounce first
+      final debounceField = asyncAnnotation.getField('debounce');
+      if (debounceField != null && !debounceField.isNull) {
+        // Duration is stored as microseconds internally
+        final microseconds =
+            debounceField.getField('_duration')?.toIntValue() ?? 0;
+        asyncDebounceMs = microseconds ~/ 1000;
+      } else {
+        // Fall back to debounceMs
+        asyncDebounceMs = asyncAnnotation.getField('debounceMs')?.toIntValue();
+      }
+    }
 
     // FieldWidget
     final widgetAnnotation = _fieldWidgetChecker.firstAnnotationOf(field);
-    final customWidgetType =
-        widgetAnnotation
-            ?.getField('widgetType')
-            ?.toTypeValue()
-            ?.getDisplayString();
+    final customWidgetType = widgetAnnotation
+        ?.getField('widgetType')
+        ?.toTypeValue()
+        ?.getDisplayString();
 
     // Detect enum types
     final baseType =
         field.type is InterfaceType ? (field.type as InterfaceType) : null;
     final isEnum = baseType?.element is EnumElement;
-    final enumValues =
-        isEnum
-            ? (baseType!.element as EnumElement).fields
-                .where((f) => f.isEnumConstant)
-                .map((f) => f.name!)
-                .toList()
-            : null;
+    final enumValues = isEnum
+        ? (baseType!.element as EnumElement)
+            .fields
+            .where((f) => f.isEnumConstant)
+            .map((f) => f.name)
+            .toList()
+        : null;
+
+    // ========== NEW v1.0.0 ANNOTATIONS ==========
+
+    // FormStep
+    final formStepAnnotation = _formStepChecker.firstAnnotationOf(field);
+    final formStep = formStepAnnotation?.getField('step')?.toIntValue();
+    final formStepTitle =
+        formStepAnnotation?.getField('title')?.toStringValue();
+
+    // ShowWhen
+    final showWhenAnnotation = _showWhenChecker.firstAnnotationOf(field);
+    final showWhenField =
+        showWhenAnnotation?.getField('field')?.toStringValue();
+    Object? showWhenEquals;
+    if (showWhenAnnotation != null) {
+      final equalsField = showWhenAnnotation.getField('equals');
+      if (equalsField != null && !equalsField.isNull) {
+        // Try to extract the value - could be bool, String, int, etc.
+        showWhenEquals = equalsField.toBoolValue() ??
+            equalsField.toStringValue() ??
+            equalsField.toIntValue() ??
+            equalsField.toDoubleValue();
+      }
+    }
+
+    // FieldGroup
+    final fieldGroupAnnotation = _fieldGroupChecker.firstAnnotationOf(field);
+    final fieldGroup = fieldGroupAnnotation?.getField('name')?.toStringValue();
+
+    // PhoneNumber
+    final phoneNumberAnnotation = _phoneNumberChecker.firstAnnotationOf(field);
+    final isPhoneNumber = phoneNumberAnnotation != null;
+    final phoneNumberMessage =
+        phoneNumberAnnotation?.getField('message')?.toStringValue();
+
+    // SearchableDropdown
+    final searchableDropdownAnnotation =
+        _searchableDropdownChecker.firstAnnotationOf(field);
+    final isSearchableDropdown = searchableDropdownAnnotation != null;
+    final searchableDropdownHintText =
+        searchableDropdownAnnotation?.getField('hintText')?.toStringValue();
+
+    // DateRange
+    final dateRangeAnnotation = _dateRangeChecker.firstAnnotationOf(field);
+    final isDateRange = dateRangeAnnotation != null;
+    final dateRangeFirstDate =
+        dateRangeAnnotation?.getField('firstDate')?.toIntValue();
+    final dateRangeLastDate =
+        dateRangeAnnotation?.getField('lastDate')?.toIntValue();
+    final dateRangeHelpText =
+        dateRangeAnnotation?.getField('helpText')?.toStringValue();
+
+    // Slider
+    final sliderAnnotation = _sliderChecker.firstAnnotationOf(field);
+    final isSlider = sliderAnnotation != null;
+    final sliderMin = sliderAnnotation?.getField('min')?.toDoubleValue();
+    final sliderMax = sliderAnnotation?.getField('max')?.toDoubleValue();
+    final sliderDivisions =
+        sliderAnnotation?.getField('divisions')?.toIntValue();
+    final sliderLabel = sliderAnnotation?.getField('label')?.toStringValue();
+
+    // RatingInput
+    final ratingInputAnnotation = _ratingInputChecker.firstAnnotationOf(field);
+    final isRatingInput = ratingInputAnnotation != null;
+    final ratingMaxStars =
+        ratingInputAnnotation?.getField('maxStars')?.toIntValue();
+
+    // ChipsInput
+    final chipsInputAnnotation = _chipsInputChecker.firstAnnotationOf(field);
+    final isChipsInput = chipsInputAnnotation != null;
+    final chipsMaxChips =
+        chipsInputAnnotation?.getField('maxChips')?.toIntValue();
+    final chipsAllowCustom =
+        chipsInputAnnotation?.getField('allowCustom')?.toBoolValue();
+
+    // ColorPicker
+    final colorPickerAnnotation = _colorPickerChecker.firstAnnotationOf(field);
+    final isColorPicker = colorPickerAnnotation != null;
+    final colorPickerShowAlpha =
+        colorPickerAnnotation?.getField('showAlpha')?.toBoolValue();
+
+    // RichText
+    final richTextAnnotation = _richTextChecker.firstAnnotationOf(field);
+    final isRichText = richTextAnnotation != null;
+    final richTextMinLines =
+        richTextAnnotation?.getField('minLines')?.toIntValue();
+    final richTextMaxLines =
+        richTextAnnotation?.getField('maxLines')?.toIntValue();
 
     return ResolvedField(
-      name: field.name!,
+      name: field.name,
       typeName: typeName,
       isNullable: isNullable,
       isEnum: isEnum,
@@ -164,6 +301,35 @@ class FieldResolver {
       hasAsyncValidator: hasAsyncValidator,
       asyncDebounceMs: asyncDebounceMs,
       customWidgetType: customWidgetType,
+      // New v1.0.0 properties
+      formStep: formStep,
+      formStepTitle: formStepTitle,
+      showWhenField: showWhenField,
+      showWhenEquals: showWhenEquals,
+      fieldGroup: fieldGroup,
+      isPhoneNumber: isPhoneNumber,
+      phoneNumberMessage: phoneNumberMessage,
+      isSearchableDropdown: isSearchableDropdown,
+      searchableDropdownHintText: searchableDropdownHintText,
+      isDateRange: isDateRange,
+      dateRangeFirstDate: dateRangeFirstDate,
+      dateRangeLastDate: dateRangeLastDate,
+      dateRangeHelpText: dateRangeHelpText,
+      isSlider: isSlider,
+      sliderMin: sliderMin,
+      sliderMax: sliderMax,
+      sliderDivisions: sliderDivisions,
+      sliderLabel: sliderLabel,
+      isRatingInput: isRatingInput,
+      ratingMaxStars: ratingMaxStars,
+      isChipsInput: isChipsInput,
+      chipsMaxChips: chipsMaxChips,
+      chipsAllowCustom: chipsAllowCustom,
+      isColorPicker: isColorPicker,
+      colorPickerShowAlpha: colorPickerShowAlpha,
+      isRichText: isRichText,
+      richTextMinLines: richTextMinLines,
+      richTextMaxLines: richTextMaxLines,
     );
   }
 

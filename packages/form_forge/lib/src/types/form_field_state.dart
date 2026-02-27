@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 ///
 /// Each field in a generated form controller has a corresponding
 /// [ForgeFieldState] that tracks the field's current value, validation
-/// errors, and whether async validation is in progress.
+/// errors, whether async validation is in progress, and enabled state.
 ///
 /// ```dart
 /// final field = ForgeFieldState<String>(initialValue: '');
@@ -16,11 +16,15 @@ class ForgeFieldState<T> extends ChangeNotifier {
   T _value;
   String? _error;
   final T _initialValue;
+  bool _isEnabled;
+  bool _isValidating;
 
   /// Creates a [ForgeFieldState] with the given [initialValue].
-  ForgeFieldState({required T initialValue})
-    : _value = initialValue,
-      _initialValue = initialValue;
+  ForgeFieldState({required T initialValue, bool enabled = true})
+      : _value = initialValue,
+        _initialValue = initialValue,
+        _isEnabled = enabled,
+        _isValidating = false;
 
   /// The current value of the field.
   T get value => _value;
@@ -47,10 +51,46 @@ class ForgeFieldState<T> extends ChangeNotifier {
   /// Whether the field is currently valid (has no error).
   bool get isValid => _error == null;
 
+  /// Whether the field is currently enabled.
+  ///
+  /// Disabled fields skip validation and render as disabled in the UI.
+  bool get isEnabled => _isEnabled;
+
+  /// Sets the enabled state and notifies listeners.
+  set isEnabled(bool value) {
+    if (_isEnabled != value) {
+      _isEnabled = value;
+      notifyListeners();
+    }
+  }
+
+  /// Whether the field is currently running async validation.
+  bool get isValidating => _isValidating;
+
+  /// Sets the async validation state and notifies listeners.
+  set isValidating(bool value) {
+    if (_isValidating != value) {
+      _isValidating = value;
+      notifyListeners();
+    }
+  }
+
+  /// The initial value used for reset operations.
+  T get initialValue => _initialValue;
+
   /// Resets the field to its initial value and clears any error.
   void reset() {
     _value = _initialValue;
     _error = null;
+    _isValidating = false;
     notifyListeners();
+  }
+
+  /// Clears only the error without changing the value.
+  void clearError() {
+    if (_error != null) {
+      _error = null;
+      notifyListeners();
+    }
   }
 }

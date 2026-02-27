@@ -153,7 +153,7 @@ Future<String> _generate(String source) async {
       export 'src/constants/defaults.dart';
     ''',
     'form_forge|lib/src/annotations/form_forge.dart':
-        'class FormForge { const FormForge(); }',
+        'class FormForge { final String? persistKey; const FormForge({this.persistKey}); }',
     'form_forge|lib/src/annotations/field_widget.dart':
         'class FieldWidget { final Type widgetType; const FieldWidget(this.widgetType); }',
     'form_forge|lib/src/annotations/validators/is_required.dart':
@@ -174,7 +174,7 @@ Future<String> _generate(String source) async {
         'class MustMatch { final String field; final String? message; const MustMatch(this.field, {this.message}); }',
     'form_forge|lib/src/annotations/validators/async_validator.dart': '''
       typedef AsyncValidatorFn = Future<String?> Function(dynamic value);
-      class AsyncValidate { final int debounceMs; const AsyncValidate({this.debounceMs = 500}); }
+      class AsyncValidate { final int debounceMs; final Duration? debounce; const AsyncValidate({this.debounceMs = 500, this.debounce}); }
     ''',
     'form_forge|lib/src/types/form_forge_validator.dart':
         'abstract class FormForgeValidator { const FormForgeValidator(); String? validate(dynamic value); }',
@@ -184,20 +184,19 @@ Future<String> _generate(String source) async {
   };
 
   final builder = formForgeBuilder(BuilderOptions.empty);
+  final writer = InMemoryAssetWriter();
 
-  final result = await testBuilder(
+  await testBuilder(
     builder,
     srcs,
     rootPackage: 'a',
-    flattenOutput: true,
+    writer: writer,
   );
 
-  for (final output in result.outputs) {
-    if (output.package == 'a') {
-      final content = result.readerWriter.testing.readString(output);
-      if (content.trim().isNotEmpty) {
-        return content;
-      }
+  // Find the generated output
+  for (final entry in writer.assets.entries) {
+    if (entry.key.package == 'a' && entry.key.path.endsWith('.g.dart')) {
+      return String.fromCharCodes(entry.value);
     }
   }
 

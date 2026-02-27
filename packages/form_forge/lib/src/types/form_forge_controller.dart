@@ -6,7 +6,7 @@ import 'form_field_state.dart';
 ///
 /// Generated controllers extend this class and override [fields] to provide
 /// the list of field states. The base class provides common functionality
-/// like overall validity checking, error aggregation, and reset.
+/// like overall validity checking, error aggregation, reset, and enabled state.
 ///
 /// This class uses [ChangeNotifier] so it can be listened to by any Flutter
 /// state management solution (Provider, Riverpod, Bloc, or vanilla setState).
@@ -23,6 +23,7 @@ import 'form_field_state.dart';
 /// ```
 abstract class FormForgeController extends ChangeNotifier {
   bool _fieldsInitialized = false;
+  bool _isEnabled = true;
 
   /// The list of all field states in this form.
   ///
@@ -31,6 +32,22 @@ abstract class FormForgeController extends ChangeNotifier {
 
   /// Whether all fields in the form are currently valid.
   bool get isValid => fields.every((field) => field.isValid);
+
+  /// Whether the entire form is enabled.
+  ///
+  /// When disabled, all fields are rendered as disabled and validation is skipped.
+  bool get isEnabled => _isEnabled;
+
+  /// Sets the enabled state for the entire form.
+  set isEnabled(bool value) {
+    if (_isEnabled != value) {
+      _isEnabled = value;
+      for (final field in fields) {
+        field.isEnabled = value;
+      }
+      notifyListeners();
+    }
+  }
 
   /// Returns a map of field errors keyed by field index.
   ///
@@ -49,6 +66,14 @@ abstract class FormForgeController extends ChangeNotifier {
   void reset() {
     for (final field in fields) {
       field.reset();
+    }
+    notifyListeners();
+  }
+
+  /// Clears all field errors without changing values.
+  void clearErrors() {
+    for (final field in fields) {
+      field.clearError();
     }
     notifyListeners();
   }

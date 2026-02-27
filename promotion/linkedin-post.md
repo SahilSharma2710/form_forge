@@ -1,6 +1,6 @@
 # LinkedIn Post
 
-Just shipped my first open-source Flutter package to pub.dev: form_forge
+Just shipped a new open-source Flutter package to pub.dev: form_forge
 
 The problem: Every Flutter app has forms. Login, signup, checkout, profile edit. And every form means the same boilerplate — controllers, validators, dispose, error handling, state management. A simple login form? 87 lines of code. For two fields.
 
